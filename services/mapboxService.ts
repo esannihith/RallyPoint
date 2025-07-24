@@ -1,7 +1,8 @@
 import polyline from '@mapbox/polyline';
 import { NavigationRoute, NavigationStep, MapboxDirectionsResponse } from '@/types/navigation';
 
-const MAPBOX_ACCESS_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
+import Constants from 'expo-constants';
+const MAPBOX_ACCESS_TOKEN = Constants.expoConfig?.extra?.MAPBOX_ACCESS_TOKEN;
 
 if (!MAPBOX_ACCESS_TOKEN) {
   console.warn('Mapbox access token not found. Please set EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN in your environment variables.');

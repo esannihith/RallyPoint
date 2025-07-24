@@ -15,18 +15,9 @@ export default {
       backgroundColor: "#8B5CF6"
     },
     ios: {
-      supportsTablet: true,
-      config: {
-        googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || "AIzaSyAR8Sxn_UmTfySxL4DT1RefR8j-QYGntpA"
-      }
+      supportsTablet: true
     },
-    android: {
-      config: {
-        googleMaps: {
-          apiKey: process.env.GOOGLE_MAPS_API_KEY || "AIzaSyAR8Sxn_UmTfySxL4DT1RefR8j-QYGntpA"
-        }
-      }
-    },
+    android: {},
     plugins: [
       "expo-router", 
       "expo-font", 
@@ -39,6 +30,11 @@ export default {
         }
       ]
     ],
+    extra: {
+      GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+      MAPBOX_ACCESS_TOKEN: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN,
+      API_URL: process.env.EXPO_PUBLIC_API_URL
+    },
     experiments: {
       typedRoutes: true
     }

@@ -1,9 +1,10 @@
 import { io, Socket } from 'socket.io-client';
 import { SocketEvents, LocationUpdateData, LocationData, RoomState, ChatMessage, SendMessageData } from '@/types/socket';
-
+import Constants from 'expo-constants';
 class SocketService {
   private socket: Socket | null = null;
   private token: string | null = null;
+  private Api_url: string | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
@@ -12,8 +13,8 @@ class SocketService {
   connect(token: string): Promise<void> {
     return new Promise((resolve, reject) => {
       this.token = token;
-      
-      this.socket = io(process.env.EXPO_PUBLIC_API_URL?.replace('/api', '') || 'http://192.168.1.4:3001', {
+      this.Api_url = Constants.expoConfig?.extra?.API_URL;
+      this.socket = io(this.Api_url?.replace('/api', ''), {
         auth: { token },
         transports: ['websocket', 'polling'],
         timeout: 10000,

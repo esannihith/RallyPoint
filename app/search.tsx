@@ -26,6 +26,8 @@ import {
   clearRecentSearches
 } from '@/services/storageService';
 import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
+import * as Network from 'expo-network';
+import InternetToast from '@/components/ui/InternetToast'
 
 export default function SearchScreen() {
   const params = useLocalSearchParams();
@@ -41,6 +43,7 @@ export default function SearchScreen() {
   const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
   const [recentSearches, setRecentSearches] = useState<SavedPlace[]>([]);
   const [isLoadingPlaceDetails, setIsLoadingPlaceDetails] = useState(false);
+  const [showNoInternet, setShowNoInternet] = useState(false);
   
   const { setSelectedPlace, setBottomSheetOpen } = useLocationStore();
   const { setFromLocation, setToLocation } = useNavigationStore();
@@ -79,7 +82,14 @@ export default function SearchScreen() {
         setIsLoading(false);
         return;
       }
-
+      // Check internet connectivity
+      const netState = await Network.getNetworkStateAsync();
+      if (!netState.isConnected || !netState.isInternetReachable) {
+        setShowNoInternet(true);
+        setIsLoading(false);
+        setTimeout(() => setShowNoInternet(false), 2000);
+        return;
+      }
       try {
         const results = await searchPlaces(query);
         setSearchResults(results);
@@ -102,6 +112,13 @@ export default function SearchScreen() {
   }, [searchQuery, debouncedSearch]);
 
   const handlePlaceSelect = async (prediction: AutocompletePrediction) => {
+    // Check internet connectivity
+    const netState = await Network.getNetworkStateAsync();
+    if (!netState.isConnected || !netState.isInternetReachable) {
+      setShowNoInternet(true);
+      setTimeout(() => setShowNoInternet(false), 2000);
+      return;
+    }
     try {
       Keyboard.dismiss();
       
@@ -457,6 +474,7 @@ export default function SearchScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {showNoInternet && <InternetToast />}
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
