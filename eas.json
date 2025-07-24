@@ -14,12 +14,7 @@
       "android": {
         "buildType": "apk"
       },
-      "channel": "preview",
-      "env": {
-        "MAPS_API_KEY": "@GOOGLE_MAPS_API_KEY",
-        "MAPBOX_ACCESS_TOKEN": "@MAPBOX_ACCESS_TOKEN",
-        "API_URL": "@API_URL"
-      }
+      "channel": "preview"
     },
     "production": {
       "android": {
@@ -28,12 +23,7 @@
       "ios": {
         "simulator": false
       },
-      "channel": "production",
-      "env": {
-        "MAPS_API_KEY": "@GOOGLE_MAPS_API_KEY",
-        "MAPBOX_ACCESS_TOKEN": "@MAPBOX_ACCESS_TOKEN",
-        "API_URL": "@API_URL"
-      }
+      "channel": "production"
     }
   }
 }
