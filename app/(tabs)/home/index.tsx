@@ -7,15 +7,17 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Modal,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Search, X, Navigation, LocateFixed } from 'lucide-react-native';
+import { Search, X, Navigation, LocateFixed, Bug } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useLocationStore } from '@/stores/locationStore';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { PlaceDetailsBottomSheet } from '@/components/map';
+import { ApiDebugScreen } from '@/components/debug/ApiDebugScreen';
 import { saveUserLocation, getUserLocation } from '@/services/storageService';
 import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
 
@@ -42,6 +44,7 @@ const isRegionDifferent = (region1: any, region2: any, threshold = 0.001) => {
 export default function HomeScreen() {
   const mapRef = useRef<MapView>(null);
   const [region, setRegion] = useState(INDIA_CENTER);
+  const [showDebugScreen, setShowDebugScreen] = useState(false);
   const locationRequestInProgress = useRef(false);
   const lastAnimatedRegion = useRef<any>(null);
   const selectedPlaceRef = useRef<any>(null);
@@ -422,6 +425,13 @@ export default function HomeScreen() {
             )}
           </TouchableOpacity>
           <TouchableOpacity
+            style={[styles.fab, { backgroundColor: '#FFA500' }]}
+            onPress={() => setShowDebugScreen(true)}
+            activeOpacity={0.7}
+          >
+            <Bug size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[styles.fab, styles.directionsButton]}
             onPress={handleDirectionsPress}
             activeOpacity={0.7}
@@ -433,6 +443,24 @@ export default function HomeScreen() {
 
       {/* Place Details Bottom Sheet - only show when open and place selected */}
       {(isBottomSheetOpen && currentPlace) ? <PlaceDetailsBottomSheet /> : null}
+
+      {/* Debug Screen Modal */}
+      <Modal
+        visible={showDebugScreen}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowDebugScreen(false)}
+      >
+        <View style={styles.debugModal}>
+          <View style={styles.debugHeader}>
+            <Text style={styles.debugTitle}>API Debug</Text>
+            <TouchableOpacity onPress={() => setShowDebugScreen(false)}>
+              <X size={24} color="#374151" />
+            </TouchableOpacity>
+          </View>
+          <ApiDebugScreen />
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -540,5 +568,22 @@ const styles = StyleSheet.create({
   directionsButton: {
     backgroundColor: '#8B5CF6',
     borderColor: '#7C3AED',
+  },
+  debugModal: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  debugHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  debugTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#374151',
   },
 });
