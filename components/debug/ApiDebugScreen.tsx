@@ -13,7 +13,7 @@ export const ApiDebugScreen = () => {
   const testGoogleMapsApi = async () => {
     addLog('Testing Google Maps API...');
     // Access directly from process.env, which you confirmed works
-    const apiKey = process.env.EXPO_PUBLIC_Maps_API_KEY; 
+    const apiKey = process.env.EXPO_PUBLIC_MAPS_API_KEY; 
     
     if (!apiKey) {
       addLog('❌ Google Maps API Key not found in process.env');
@@ -81,7 +81,7 @@ export const ApiDebugScreen = () => {
 
     // This part should now consistently show the actual values!
     addLog(`[process.env] API_URL: ${process.env.EXPO_PUBLIC_API_URL || 'NOT FOUND'}`);
-    addLog(`[process.env] Maps_API_KEY: ${process.env.EXPO_PUBLIC_Maps_API_KEY || 'NOT FOUND'}`);
+    addLog(`[process.env] Maps_API_KEY: ${process.env.EXPO_PUBLIC_MAPS_API_KEY || 'NOT FOUND'}`);
     addLog(`[process.env] MAPBOX_ACCESS_TOKEN: ${process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || 'NOT FOUND'}`);
   };
 
