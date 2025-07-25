@@ -12,12 +12,12 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Search, X, Navigation, LocateFixed, Bug } from 'lucide-react-native';
+import { Search, X, Navigation, LocateFixed /*, Bug*/ } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useLocationStore } from '@/stores/locationStore';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { PlaceDetailsBottomSheet } from '@/components/map';
-import { ApiDebugScreen } from '@/components/debug/ApiDebugScreen';
+// import { ApiDebugScreen } from '@/components/debug/ApiDebugScreen';
 import { saveUserLocation, getUserLocation } from '@/services/storageService';
 import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
 
@@ -44,7 +44,7 @@ const isRegionDifferent = (region1: any, region2: any, threshold = 0.001) => {
 export default function HomeScreen() {
   const mapRef = useRef<MapView>(null);
   const [region, setRegion] = useState(INDIA_CENTER);
-  const [showDebugScreen, setShowDebugScreen] = useState(false);
+  // const [showDebugScreen, setShowDebugScreen] = useState(false);
   const locationRequestInProgress = useRef(false);
   const lastAnimatedRegion = useRef<any>(null);
   const selectedPlaceRef = useRef<any>(null);
@@ -424,6 +424,7 @@ export default function HomeScreen() {
               <LocateFixed size={22} color="#374151" />
             )}
           </TouchableOpacity>
+          {/* Debug Button - Commented out for production
           <TouchableOpacity
             style={[styles.fab, { backgroundColor: '#FFA500' }]}
             onPress={() => setShowDebugScreen(true)}
@@ -431,6 +432,7 @@ export default function HomeScreen() {
           >
             <Bug size={22} color="#FFFFFF" />
           </TouchableOpacity>
+          */}
           <TouchableOpacity
             style={[styles.fab, styles.directionsButton]}
             onPress={handleDirectionsPress}
@@ -444,7 +446,7 @@ export default function HomeScreen() {
       {/* Place Details Bottom Sheet - only show when open and place selected */}
       {(isBottomSheetOpen && currentPlace) ? <PlaceDetailsBottomSheet /> : null}
 
-      {/* Debug Screen Modal */}
+      {/* Debug Screen Modal - Commented out for production
       <Modal
         visible={showDebugScreen}
         animationType="slide"
@@ -461,6 +463,7 @@ export default function HomeScreen() {
           <ApiDebugScreen />
         </View>
       </Modal>
+      */}
     </SafeAreaView>
   );
 }
@@ -569,6 +572,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#8B5CF6',
     borderColor: '#7C3AED',
   },
+  /* Debug Modal Styles - Commented out for production
   debugModal: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -586,4 +590,5 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#374151',
   },
+  */
 });

@@ -1,8 +1,7 @@
 import { PlaceResult, AutocompletePrediction } from '@/types';
 
 // Google Maps Places API service
-import Constants from 'expo-constants';
-const GOOGLE_MAPS_API_KEY = Constants.expoConfig?.extra?.GOOGLE_MAPS_API_KEY;
+const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 if (!GOOGLE_MAPS_API_KEY) {
   console.warn('Google Maps API key not found. Please set EXPO_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.');

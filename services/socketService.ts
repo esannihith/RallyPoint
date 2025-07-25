@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { SocketEvents, LocationUpdateData, LocationData, RoomState, ChatMessage, SendMessageData } from '@/types/socket';
-import Constants from 'expo-constants';
+
 class SocketService {
   private socket: Socket | null = null;
   private token: string | null = null;
@@ -13,7 +13,7 @@ class SocketService {
   connect(token: string): Promise<void> {
     return new Promise((resolve, reject) => {
       this.token = token;
-      this.Api_url = Constants.expoConfig?.extra?.API_URL;
+      this.Api_url = process.env.EXPO_PUBLIC_API_URL || null;
       this.socket = io(this.Api_url?.replace('/api', ''), {
         auth: { token },
         transports: ['websocket', 'polling'],
