@@ -19,7 +19,7 @@ export default {
       icon: "./assets/images/App-icon.png",
       bundleIdentifier: "com.wemaps.groupnavigation",
       config: {
-        googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY // Fixed prefix
+        googleMapsApiKey: process.env.GOOGLE_MAPS_NATIVE_KEY // Fixed prefix
       }
     },
 
@@ -31,7 +31,7 @@ export default {
       },
       config: {
         googleMaps: {
-          apiKey: process.env.GOOGLE_MAPS_API_KEY // Fixed prefix
+          apiKey: process.env.GOOGLE_MAPS_NATIVE_KEY // Fixed prefix
         }
       }
     },
