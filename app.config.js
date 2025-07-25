@@ -51,9 +51,9 @@ export default {
 
     extra: {
       // Added EXPO_PUBLIC_ prefix for client-side variables
-      EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
-      EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN,
-      EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
+      GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+      MAPBOX_ACCESS_TOKEN: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN,
+      API_URL: process.env.EXPO_PUBLIC_API_URL,
       "eas": {
         "projectId": "f7fd7692-9e75-45e3-9d87-95022a4bbf09"
       }
