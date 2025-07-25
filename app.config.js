@@ -9,9 +9,6 @@ export default {
     newArchEnabled: true,
     platforms: ["ios", "android"],
 
-    // Shared app icon for iOS
-
-
     splash: {
       image: "./assets/images/Splash-screen.jpg",
       resizeMode: "cover",
@@ -22,7 +19,7 @@ export default {
       icon: "./assets/images/App-icon.png",
       bundleIdentifier: "com.wemaps.groupnavigation",
       config: {
-        googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+        googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY // Fixed prefix
       }
     },
 
@@ -34,7 +31,7 @@ export default {
       },
       config: {
         googleMaps: {
-          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+          apiKey: process.env.GOOGLE_MAPS_API_KEY // Fixed prefix
         }
       }
     },
@@ -43,7 +40,7 @@ export default {
       "expo-router",
       "expo-font",
       "expo-web-browser",
-      "expo-location",
+      // Fixed: Removed duplicate expo-location plugin
       [
         "expo-location",
         {
@@ -53,9 +50,10 @@ export default {
     ],
 
     extra: {
-      GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
-      MAPBOX_ACCESS_TOKEN: process.env.MAPBOX_ACCESS_TOKEN,
-      API_URL: process.env.API_URL,
+      // Added EXPO_PUBLIC_ prefix for client-side variables
+      EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+      EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN,
+      EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
       "eas": {
         "projectId": "f7fd7692-9e75-45e3-9d87-95022a4bbf09"
       }
