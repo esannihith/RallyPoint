@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Button } from 'react-native';
-import Constants from 'expo-constants';
+import Constants from 'expo-constants'; // Keep Constants for other uses if any
 
 export const ApiDebugScreen = () => {
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
@@ -12,10 +12,11 @@ export const ApiDebugScreen = () => {
 
   const testGoogleMapsApi = async () => {
     addLog('Testing Google Maps API...');
-    const apiKey = Constants.expoConfig?.extra?.GOOGLE_MAPS_API_KEY;
+    // Access directly from process.env, which you confirmed works
+    const apiKey = process.env.EXPO_PUBLIC_Maps_API_KEY; 
     
     if (!apiKey) {
-      addLog('❌ Google Maps API Key not found in Constants');
+      addLog('❌ Google Maps API Key not found in process.env');
       return;
     }
     
@@ -43,10 +44,11 @@ export const ApiDebugScreen = () => {
 
   const testBackendApi = async () => {
     addLog('Testing Backend API...');
-    const apiUrl = Constants.expoConfig?.extra?.API_URL;
+    // Access directly from process.env, which you confirmed works
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
     
     if (!apiUrl) {
-      addLog('❌ Backend API URL not found in Constants');
+      addLog('❌ Backend API URL not found in process.env');
       return;
     }
     
@@ -70,9 +72,17 @@ export const ApiDebugScreen = () => {
 
   const checkConstants = () => {
     addLog('Checking Constants...');
-    addLog(`API_URL: ${Constants.expoConfig?.extra?.API_URL || 'NOT FOUND'}`);
-    addLog(`GOOGLE_MAPS_API_KEY: ${Constants.expoConfig?.extra?.GOOGLE_MAPS_API_KEY || 'NOT FOUND'}`);
-    addLog(`MAPBOX_ACCESS_TOKEN: ${Constants.expoConfig?.extra?.MAPBOX_ACCESS_TOKEN || 'NOT FOUND'}`);
+    // This part will still likely show "NOT FOUND" or the hardcoded test key,
+    // as the issue is with `Constants.expoConfig.extra` population.
+    addLog(`[expoConfig.extra] API_URL: ${Constants.expoConfig?.extra?.API_URL || 'NOT FOUND'}`);
+    addLog(`[expoConfig.extra] Maps_API_KEY: ${Constants.expoConfig?.extra?.Maps_API_KEY || 'NOT FOUND'}`);
+    addLog(`[expoConfig.extra] MAPBOX_ACCESS_TOKEN: ${Constants.expoConfig?.extra?.MAPBOX_ACCESS_TOKEN || 'NOT FOUND'}`);
+    addLog(`[expoConfig.extra] TEST_KEY_HARDCODED: ${Constants.expoConfig?.extra?.TEST_KEY_HARDCODED || 'NOT FOUND'}`);
+
+    // This part should now consistently show the actual values!
+    addLog(`[process.env] API_URL: ${process.env.EXPO_PUBLIC_API_URL || 'NOT FOUND'}`);
+    addLog(`[process.env] Maps_API_KEY: ${process.env.EXPO_PUBLIC_Maps_API_KEY || 'NOT FOUND'}`);
+    addLog(`[process.env] MAPBOX_ACCESS_TOKEN: ${process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || 'NOT FOUND'}`);
   };
 
   useEffect(() => {
