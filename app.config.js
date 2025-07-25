@@ -42,10 +42,7 @@ export default {
       "expo-web-browser",
       // Fixed: Removed duplicate expo-location plugin
       [
-        "expo-location",
-        {
-          locationAlwaysAndWhenInUsePermission: "Allow WeMaps to use your location to show your position on the map and enable navigation features."
-        }
+        "expo-location"
       ]
     ],
 

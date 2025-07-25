@@ -84,7 +84,7 @@ export default function SearchScreen() {
       }
       // Check internet connectivity
       const netState = await Network.getNetworkStateAsync();
-      if (!netState.isConnected || !netState.isInternetReachable) {
+      if (!netState.isConnected) {
         setShowNoInternet(true);
         setIsLoading(false);
         setTimeout(() => setShowNoInternet(false), 2000);
@@ -114,7 +114,7 @@ export default function SearchScreen() {
   const handlePlaceSelect = async (prediction: AutocompletePrediction) => {
     // Check internet connectivity
     const netState = await Network.getNetworkStateAsync();
-    if (!netState.isConnected || !netState.isInternetReachable) {
+    if (!netState.isConnected) {
       setShowNoInternet(true);
       setTimeout(() => setShowNoInternet(false), 2000);
       return;

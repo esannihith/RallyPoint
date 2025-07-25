@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as Network from 'expo-network';
 import {
   View,
   Text,
@@ -27,24 +28,30 @@ export function SignInModal({ visible, onClose, onSuccess }: SignInModalProps) {
 
   const handleSignIn = async () => {
     if (!name.trim()) {
-      Alert.alert('Error', 'Please enter your name');
+      Alert.alert('Please enter your name');
       return;
     }
 
     if (name.trim().length < 2) {
-      Alert.alert('Error', 'Name must be at least 2 characters long');
+      Alert.alert('Name must be at least 2 characters long');
+      return;
+    }
+
+    // Network connectivity check
+    const netState = await Network.getNetworkStateAsync();
+    if (!netState.isConnected) {
+      Alert.alert('No Internet. Please check your connection and try again.');
       return;
     }
 
     setIsLoading(true);
-    
     try {
       await signIn(name.trim());
       setName('');
       onSuccess?.();
       onClose();
     } catch (error) {
-      Alert.alert('Sign In Failed', error instanceof Error ? error.message : 'Please try again');
+      Alert.alert(error instanceof Error ? error.message : 'Please try again');
     } finally {
       setIsLoading(false);
     }

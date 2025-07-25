@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as Network from 'expo-network';
 import {
   View,
   Text,
@@ -44,9 +45,15 @@ export default function SignInScreen() {
       return;
     }
 
+    // Network connectivity check
+    const netState = await Network.getNetworkStateAsync();
+    if (!netState.isConnected) {
+      setError('No Internet. Please check your connection and try again.');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
-    
     try {
       await signIn(name.trim());
       router.back(); // Go back to previous screen after successful sign in
@@ -82,7 +89,7 @@ export default function SignInScreen() {
             <User size={64} color="#8B5CF6" />
           </View>
 
-          <Text style={styles.title}>Welcome to MapShare</Text>
+          <Text style={styles.title}>Welcome to WeMaps</Text>
           <Text style={styles.subtitle}>
             Enter your name to get started with group navigation
           </Text>
