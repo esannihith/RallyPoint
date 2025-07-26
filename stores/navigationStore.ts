@@ -150,6 +150,23 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
       isPaused: false,
       route: null,
       progress: null,
+      currentLocation: null, // Also clear current location
+      isMuted: false, // Reset mute state
+    });
+  },
+
+  // Reset all navigation state to initial values
+  resetNavigation: () => {
+    set({
+      isNavigating: false,
+      isPaused: false,
+      route: null,
+      progress: null,
+      currentLocation: null,
+      isMuted: false,
+      fromLocation: null,
+      toLocation: null,
+      isDirectionsMode: false,
     });
   },
 

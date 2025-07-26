@@ -1,4 +1,5 @@
 
+import React, { useEffect, useState, useCallback } from 'react';
 import { Stack } from 'expo-router';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
@@ -6,7 +7,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates';
-import React, { useEffect, useState, useCallback } from 'react';
 
 // Disable Reanimated strict mode warnings globally
 configureReanimatedLogger({

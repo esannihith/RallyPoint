@@ -347,7 +347,7 @@ export default function HomeScreen() {
   const mapBottomPadding = tabBarHeight + 20; // Add extra padding for floating buttons
 
   return (
-    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       {/* Map */}
       <MapView
         ref={mapRef}

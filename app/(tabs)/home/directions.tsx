@@ -243,8 +243,8 @@ export default function DirectionsScreen() {
             // Default to 'to' if no active input specified
             const target = activeInput || (!toLocation ? 'to' : 'from');
             router.push({ 
-              pathname: '/history',
-              params: { mode: 'directions', inputType: target } 
+              pathname: '/search',
+              params: { mode: 'directions', inputType: target, view: 'history' } 
             });
           }}
         />

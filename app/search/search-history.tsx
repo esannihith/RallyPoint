@@ -92,7 +92,7 @@ const groupPlacesByDate = (places: SavedPlace[]) => {
     }, {} as { [key: string]: SavedPlace[] });
 };
 
-export default function HistoryScreen() {
+export default function SearchHistoryScreen() {
   const [recentSearches, setRecentSearches] = useState<SavedPlace[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingPlaceDetails, setIsLoadingPlaceDetails] = useState(false);

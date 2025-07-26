@@ -12,7 +12,7 @@ export default function InternetToast() {
 const styles = StyleSheet.create({
   toast: {
     position: 'absolute',
-    top: 80,
+    top: 60,
     left: 0,
     right: 0,
     backgroundColor: '#F44336',

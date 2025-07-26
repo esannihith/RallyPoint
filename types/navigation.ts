@@ -99,6 +99,7 @@ export interface NavigationState {
   setToLocation: (location: NavigationLocation | null) => void;
   swapLocations: () => void;
   clearNavigation: () => void;
+  resetNavigation: () => void;
   setDirectionsMode: (enabled: boolean) => void;
   canGetDirections: () => boolean;
   getFromLocation: () => NavigationLocation | null;

@@ -14,6 +14,7 @@ import * as Location from 'expo-location';
 import { useRoomStore } from '@/stores/roomStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useNavigationStore } from '@/stores/navigationStore';
+import { useTabNavigationStore } from '@/stores/tabNavigationStore';
 import { socketService } from '@/services/socketService';
 import { getDeviceInfo } from '@/utils/deviceInfo';
 import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
@@ -47,6 +48,15 @@ export default function RoomMapScreen() {
   } = useRoomStore();
   const { user } = useAuthStore();
   const { setFromLocation, setToLocation, setDirectionsMode } = useNavigationStore();
+  const { setLastRoomsRoute, setUserExplicitlyReturnedToIndex } = useTabNavigationStore();
+
+  // Track when user enters room-map screen
+  useEffect(() => {
+    const roomMapRoute = `/(tabs)/rooms/room-map?roomId=${roomId}`;
+    setLastRoomsRoute(roomMapRoute);
+    // User is actively in room-map, so clear the explicit return flag
+    setUserExplicitlyReturnedToIndex(false);
+  }, [roomId, setLastRoomsRoute, setUserExplicitlyReturnedToIndex]);
 
   // Android back handler
   useAndroidBackHandler({
@@ -263,41 +273,47 @@ export default function RoomMapScreen() {
         const subscription = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.BestForNavigation,
-            timeInterval: 3000,
-            distanceInterval: 5,
+            timeInterval: 5000, // Increased to 5 seconds to reduce GPS drift updates
+            distanceInterval: 8, // Increased to 8 meters for more significant movement detection
           },
           async (location) => {
             const { latitude, longitude } = location.coords;
             
-            setCurrentLocation({ latitude, longitude });
+            // Filter out updates with poor accuracy or when stationary
+            const hasGoodAccuracy = !location.coords.accuracy || location.coords.accuracy < 15; // within 15 meters
+            const isMoving = !location.coords.speed || location.coords.speed > 0.3; // 0.3 m/s threshold
+            
+            if (hasGoodAccuracy && isMoving) {
+              setCurrentLocation({ latitude, longitude });
 
-            if (socketService.isConnected) {
-              try {
-                const deviceInfo = await getDeviceInfo();
-                
-                
-                // console.log('Sending location update:', {
-                //   roomId,
-                //   latitude,
-                //   longitude,
-                //   accuracy: location.coords.accuracy,
-                //   speed: location.coords.speed,
-                //   timestamp: new Date().toISOString(),
-                // });
-                socketService.updateLocation({
-                  roomId,
-                  latitude,
-                  longitude,
-                  accuracy: location.coords.accuracy || undefined,
-                  speed: location.coords.speed || undefined,
-                  bearing: location.coords.heading || undefined,
-                  heading: location.coords.heading || undefined,
-                  altitude: location.coords.altitude || undefined,
-                  batteryLevel: deviceInfo.batteryLevel || undefined,
-                  deviceModel: deviceInfo.deviceModel || undefined,
-                });
-              } catch (socketError) {
-                console.error('Error sending location update:', socketError);
+              if (socketService.isConnected) {
+                try {
+                  const deviceInfo = await getDeviceInfo();
+                  
+                  
+                  // console.log('Sending location update:', {
+                  //   roomId,
+                  //   latitude,
+                  //   longitude,
+                  //   accuracy: location.coords.accuracy,
+                  //   speed: location.coords.speed,
+                  //   timestamp: new Date().toISOString(),
+                  // });
+                  socketService.updateLocation({
+                    roomId,
+                    latitude,
+                    longitude,
+                    accuracy: location.coords.accuracy || undefined,
+                    speed: location.coords.speed || undefined,
+                    bearing: location.coords.heading || undefined,
+                    heading: location.coords.heading || undefined,
+                    altitude: location.coords.altitude || undefined,
+                    batteryLevel: deviceInfo.batteryLevel || undefined,
+                    deviceModel: deviceInfo.deviceModel || undefined,
+                  });
+                } catch (socketError) {
+                  console.error('Error sending location update:', socketError);
+                }
               }
             }
           }
@@ -367,6 +383,10 @@ export default function RoomMapScreen() {
   }, [roomId, clearRoomLocations, clearChatMessages]);
 
   const handleBack = () => {
+    // Mark that user explicitly returned to index via back button
+    setUserExplicitlyReturnedToIndex(true);
+    setLastRoomsRoute('/(tabs)/rooms');
+    
     cleanup();
     router.replace('/(tabs)/rooms');
   };

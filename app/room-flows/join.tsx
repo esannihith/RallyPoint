@@ -72,7 +72,7 @@ export default function JoinRoomScreen() {
             text: 'Go to Room',
             onPress: () => {
               router.replace({
-                pathname: '/room-map',
+                pathname: '/(tabs)/rooms/room-map' as any,
                 params: { roomId: room.id }
               });
             },

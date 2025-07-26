@@ -56,10 +56,10 @@ WeMaps is a next-generation extension of Google Maps, designed for groups who wa
 - **Group Navigation:** Built-in navigation for groups, not just individuals, with route selection and navigation to shared destinations.
 - **Real-time Group Chat:** Contextual chat integrated with navigation in a room.
 - **Live Location Tracking:** Optimized for dynamic group movement; view friends' locations while navigating.
-- **Seamless Tab Transitions:** Move between solo navigation and group views without losing context.
+- **Seamless Tab Transitions:** Smart navigation system that preserves user context when switching between tabs. Navigate routes in the home tab, then seamlessly switch to room tab to view group locations and chat - the app remembers your last active screen (room map or room index) and returns you there, creating a fluid workflow between solo navigation and group coordination.
 - **Privacy:** No phone number required; sign in with name+password or Google authentication.
 - **Dedicated Group Rooms:** Private rooms for focused coordination.
-- **Integrated Experience:** Navigation and communication in one app.
+- **Integrated Experience:** Navigation and group communication in one app.
 
 ---
 

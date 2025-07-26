@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Button } from 'react-native';
 
 export const ApiDebugScreen = () => {
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
 
-  const addLog = (message: string) => {
+  const addLog = useCallback((message: string) => {
     console.log(`[DEBUG] ${message}`);
     setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
-  };
+  }, []);
 
   const testGoogleMapsApi = async () => {
     addLog('Testing Google Maps API...');
@@ -69,18 +69,18 @@ export const ApiDebugScreen = () => {
     }
   };
 
-  const checkEnvironmentVars = () => {
+  const checkEnvironmentVars = useCallback(() => {
     addLog('Checking Environment Variables...');
     // Show values directly from process.env
     addLog(`[process.env] API_URL: ${process.env.EXPO_PUBLIC_API_URL || 'NOT FOUND'}`);
     addLog(`[process.env] GOOGLE_MAPS_API_KEY: ${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || 'NOT FOUND'}`);
     addLog(`[process.env] MAPBOX_ACCESS_TOKEN: ${process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || 'NOT FOUND'}`);
-  };
+  }, [addLog]);
 
   useEffect(() => {
     addLog('WeMaps Debug Screen');
     checkEnvironmentVars();
-  }, []);
+  }, [checkEnvironmentVars]);
 
   return (
     <ScrollView style={styles.container}>

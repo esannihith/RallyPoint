@@ -31,6 +31,7 @@ export function NavigationScreen() {
     currentLocation,
     startNavigation,
     stopNavigation,
+    clearNavigation,
     updateLocation,
     updateProgress,
   } = useNavigationStore();
@@ -44,9 +45,9 @@ export function NavigationScreen() {
 
   const handleStopNavigation = useCallback(() => {
     cleanup();
-    stopNavigation();
+    clearNavigation(); // Clear all navigation state including directions
     router.replace('/(tabs)/home');
-  }, [cleanup, stopNavigation]);
+  }, [cleanup, clearNavigation]);
 
   const startLocationTracking = useCallback(async () => {
     try {

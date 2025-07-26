@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Mic, MicOff } from 'lucide-react-native';
 import * as Speech from 'expo-speech';
@@ -7,6 +7,8 @@ import { calculateDistance, getManeuverIcon } from '@/services/mapboxService';
 
 export function NavigationInstructions() {
   const { progress, currentLocation, isMuted, toggleMute } = useNavigationStore();
+  const lastInstructionRef = useRef<string>('');
+  const speechTimeoutRef = useRef<number | null>(null);
 
   const navigationData = useMemo(() => {
     if (!progress?.currentStep || !currentLocation) {
@@ -37,13 +39,38 @@ export function NavigationInstructions() {
     return { primaryStep, previewStep, primaryText };
   }, [progress, currentLocation]);
 
-  // Speak instruction if not muted
-  React.useEffect(() => {
-    Speech.stop();
-    if (navigationData?.primaryText && !isMuted) {
-      Speech.speak(navigationData.primaryText);
+  // Debounced speech function to prevent rapid repeated instructions
+  const debouncedSpeak = useCallback((text: string) => {
+    // Clear any existing timeout
+    if (speechTimeoutRef.current) {
+      clearTimeout(speechTimeoutRef.current);
     }
-  }, [navigationData, isMuted]);
+    
+    // Only speak if the instruction has changed significantly
+    if (text !== lastInstructionRef.current) {
+      speechTimeoutRef.current = setTimeout(() => {
+        Speech.stop();
+        if (!isMuted) {
+          Speech.speak(text);
+          lastInstructionRef.current = text;
+        }
+      }, 1000); // 1 second debounce
+    }
+  }, [isMuted]);
+
+  // Speak instruction if not muted (with debouncing)
+  React.useEffect(() => {
+    if (navigationData?.primaryText) {
+      debouncedSpeak(navigationData.primaryText);
+    }
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (speechTimeoutRef.current) {
+        clearTimeout(speechTimeoutRef.current);
+      }
+    };
+  }, [navigationData, debouncedSpeak]);
 
   if (!navigationData) {
     return null;
@@ -56,7 +83,9 @@ export function NavigationInstructions() {
       <View style={styles.mainCard}>
         <View style={styles.mainInstruction}>
           <View style={styles.arrowContainer}>
-            {getManeuverIcon(primaryStep.maneuver.type, primaryStep.maneuver.modifier)}
+            <Text style={styles.maneuverIcon}>
+              {getManeuverIcon(primaryStep.maneuver.type, primaryStep.maneuver.modifier)}
+            </Text>
           </View>
 
           <View style={styles.instructionContent}>
@@ -106,6 +135,11 @@ const styles = StyleSheet.create({
   },
   arrowContainer: {
     marginRight: 16,
+  },
+  maneuverIcon: {
+    fontSize: 24,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   instructionContent: {
     flex: 1,

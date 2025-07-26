@@ -10,6 +10,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { router } from 'expo-router';
 import { useRoomStore } from '@/stores/roomStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useTabNavigationStore } from '@/stores/tabNavigationStore';
 import { Room } from '@/types/rooms';
 import { RoomActionButtons, RoomsSection, SignInPrompt } from '@/components/rooms';
 
@@ -25,6 +26,14 @@ export default function RoomsScreen() {
   } = useRoomStore();
 
   const { user, isAuthenticated, loadUser } = useAuthStore();
+  const { setLastRoomsRoute, setUserExplicitlyReturnedToIndex } = useTabNavigationStore();
+
+  // Track when user enters room index screen
+  useEffect(() => {
+    setLastRoomsRoute('/(tabs)/rooms');
+    // Reset the explicit return flag when user is in index
+    setUserExplicitlyReturnedToIndex(false);
+  }, [setLastRoomsRoute, setUserExplicitlyReturnedToIndex]);
 
   useEffect(() => {
     const initializeRooms = async () => {
@@ -68,7 +77,7 @@ export default function RoomsScreen() {
       router.push('/signin');
       return;
     }
-    router.push('/rooms/create');
+    router.push('/room-flows/create');
   };
 
   const handleJoinRoom = () => {
@@ -76,20 +85,26 @@ export default function RoomsScreen() {
       router.push('/signin');
       return;
     }
-    router.push('/rooms/join');
+    router.push('/room-flows/join');
   };
 
   const handleGoToRoom = (room: Room) => {
+    // Clear the explicit return flag when user actively navigates to room-map
+    setUserExplicitlyReturnedToIndex(false);
+    
     router.push({
-      pathname: '/room-map',
+      pathname: '/(tabs)/rooms/room-map' as any,
       params: { roomId: room.id }
     });
   };
 
   const handleRejoinRoom = (room: Room) => {
+    // Clear the explicit return flag when user actively navigates to room-map
+    setUserExplicitlyReturnedToIndex(false);
+    
     // Navigate to room map for rejoining
     router.push({
-      pathname: '/room-map',
+      pathname: '/(tabs)/rooms/room-map' as any,
       params: { roomId: room.id }
     });
   };
@@ -103,7 +118,7 @@ export default function RoomsScreen() {
   };
 
   const handleViewMoreRecentRooms = () => {
-    router.push('/rooms/history');
+    router.push('/room-flows/history');
   };
 
   const handleClearError = () => {

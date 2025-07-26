@@ -14,6 +14,7 @@ interface PlaceActionsProps {
 export function PlaceActions({ place }: PlaceActionsProps) {
   const { setFromLocation, setToLocation, setDirectionsMode } = useNavigationStore();
   const { getCurrentLocation } = useLocationStore();
+  const { isAuthenticated } = useAuthStore();
 
   const handleDirections = useCallback(() => {
     // Set the selected place as destination and navigate directly to routes screen
@@ -51,8 +52,6 @@ export function PlaceActions({ place }: PlaceActionsProps) {
 
   const handleCollab = useCallback(() => {
     // Check if user is authenticated first
-    const { isAuthenticated } = useAuthStore.getState();
-    
     if (!isAuthenticated) {
       router.push('/signin');
       return;
@@ -61,7 +60,7 @@ export function PlaceActions({ place }: PlaceActionsProps) {
     // Navigate to create room with pre-filled destination
     if (place.geometry?.location) {
       router.push({
-        pathname: '/rooms/create',
+        pathname: '/room-flows/create',
         params: {
           placeName: place.name || 'Unknown Place',
           placeAddress: place.formatted_address || place.vicinity || 'Address not available',
@@ -73,7 +72,7 @@ export function PlaceActions({ place }: PlaceActionsProps) {
     } else {
       // Fallback without coordinates
       router.push({
-        pathname: '/rooms/create',
+        pathname: '/room-flows/create',
         params: {
           placeName: place.name || 'Unknown Place',
           placeAddress: place.formatted_address || place.vicinity || 'Address not available',
@@ -81,7 +80,7 @@ export function PlaceActions({ place }: PlaceActionsProps) {
         }
       });
     }
-  }, [place]);
+  }, [place, isAuthenticated]);
 
   const handleShare = useCallback(() => {
     if (place.geometry?.location) {

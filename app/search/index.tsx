@@ -217,7 +217,7 @@ export default function SearchScreen() {
           
           // Navigate back to create room screen with place data
           router.push({
-            pathname: '/rooms/create',
+            pathname: '/room-flows/create',
             params: {
               placeName: prediction.structured_formatting.main_text,
               placeAddress: prediction.description,
@@ -229,7 +229,7 @@ export default function SearchScreen() {
         } else {
           // Fallback without coordinates
           router.push({
-            pathname: '/rooms/create',
+            pathname: '/room-flows/create',
             params: {
               placeName: prediction.structured_formatting.main_text,
               placeAddress: prediction.description,
@@ -345,7 +345,7 @@ export default function SearchScreen() {
         if (latitude && longitude) {
           // Navigate back to create room screen with place data
           router.push({
-            pathname: '/rooms/create',
+            pathname: '/room-flows/create',
             params: {
               placeName: place.name,
               placeAddress: place.address,
@@ -357,7 +357,7 @@ export default function SearchScreen() {
         } else {
           // Fallback without coordinates
           router.push({
-            pathname: '/rooms/create',
+            pathname: '/room-flows/create',
             params: {
               placeName: place.name,
               placeAddress: place.address,
@@ -531,7 +531,7 @@ export default function SearchScreen() {
             onSavePlace={!isDirectionsMode ? handleSavePlace : undefined}
             onRemovePlace={handleRemoveSavedPlace}
             onClearRecentSearches={handleClearRecentSearches}
-            onViewMore={() => router.push('/history')}
+            onViewMore={() => router.push('/search/search-history')}
             showHeaders={true}
             showActionButtons={true}
             showMoreHistoryLink={true}

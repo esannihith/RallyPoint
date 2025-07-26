@@ -26,6 +26,7 @@ export default function NavigationScreen() {
   const {
     startNavigation,
     stopNavigation,
+    clearNavigation,
     updateLocation,
   } = useNavigationStore();
 
@@ -40,10 +41,10 @@ export default function NavigationScreen() {
   // Stable stop navigation handler
   const handleStopNavigation = useCallback(() => {
     cleanup();
-    stopNavigation();
+    clearNavigation(); // Clear all navigation state including directions
     // Navigate back to home tab
     router.replace('/(tabs)/home');
-  }, [cleanup, stopNavigation]);
+  }, [cleanup, clearNavigation]);
 
   // Android back handler
   useAndroidBackHandler({

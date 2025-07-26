@@ -123,7 +123,7 @@ export default function CreateRoomScreen() {
     return () => {
       removeCallback('create-room-destination');
     };
-  }, [setCallback, removeCallback]);
+  }, []); // Empty dependency array since Zustand store methods are stable
 
   // Android back handler
   useAndroidBackHandler({
@@ -143,7 +143,7 @@ export default function CreateRoomScreen() {
       pathname: '/search',
       params: { 
         mode: 'room_destination',
-        returnTo: 'rooms/create',
+        returnTo: 'room-flows/create',
         callbackId: 'create-room-destination'
       }
     });
@@ -237,7 +237,7 @@ export default function CreateRoomScreen() {
       
       // Automatically navigate to room-map
       router.replace({
-        pathname: '/room-map',
+        pathname: '/(tabs)/rooms/room-map' as any,
         params: { roomId: newRoom.id }
       });
     } catch (error) {
