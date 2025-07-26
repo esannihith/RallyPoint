@@ -55,6 +55,8 @@ export interface RoomStore {
   activeRoom: Room | null;
   currentRoomLocations: import('@/types/socket').LocationData[];
   chatMessages: import('@/types/socket').ChatMessage[];
+  unreadCount: number;
+  isChatOpen: boolean;
   isLoading: boolean;
   error: string | null;
   
@@ -84,6 +86,8 @@ export interface RoomStore {
   setChatMessages: (messages: import('@/types/socket').ChatMessage[]) => void;
   clearChatMessages: () => void;
   getChatMessages: () => import('@/types/socket').ChatMessage[];
+  resetUnreadCount: () => void;
+  setChatOpen: (open: boolean) => void;
 }
 
 export interface DestinationLocation {

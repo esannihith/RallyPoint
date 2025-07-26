@@ -18,7 +18,8 @@ import { useTabNavigationStore } from '@/stores/tabNavigationStore';
 import { socketService } from '@/services/socketService';
 import { getDeviceInfo } from '@/utils/deviceInfo';
 import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
-import { RoomHeader, RoomMap, BackModal, ChatModal } from '@/components/rooms';
+import { RoomHeader, RoomMap, BackModal } from '@/components/rooms';
+import { DirectionsFab } from '@/components/rooms/DirectionsFab';
 
 export default function RoomMapScreen() {
   const { roomId } = useLocalSearchParams<{ roomId: string }>();
@@ -551,8 +552,6 @@ export default function RoomMapScreen() {
         userMarkers={userMarkers}
         onBackPress={() => setShowBackModal(true)}
         onSharePress={handleShareRoom}
-        onDirectionsPress={handleDirectionsToRoomDestination}
-        onMessagesPress={handleMessagesPress}
         roomStoreLoading={roomStoreLoading}
       />
 
@@ -577,15 +576,7 @@ export default function RoomMapScreen() {
         }}
       />
 
-      <ChatModal
-        visible={showChatModal}
-        onClose={() => setShowChatModal(false)}
-        roomId={roomId}
-        roomName={roomDetails?.name || 'Room Chat'}
-        messages={chatMessages}
-        onSendMessage={handleSendMessage}
-        currentUserId={user?.id || ''}
-      />
+      <DirectionsFab onPress={handleDirectionsToRoomDestination} />
     </View>
   );
 }

@@ -8,8 +8,6 @@ interface RoomHeaderProps {
   userMarkers: any[];
   onBackPress: () => void;
   onSharePress: () => void;
-  onDirectionsPress: () => void;
-  onMessagesPress: () => void;
   roomStoreLoading: boolean;
 }
 
@@ -18,21 +16,15 @@ export function RoomHeader({
   userMarkers,
   onBackPress,
   onSharePress,
-  onDirectionsPress,
-  onMessagesPress,
   roomStoreLoading
 }: RoomHeaderProps) {
-  const formatDestination = (roomDetails: any) => {
-    if (roomDetails?.destination) {
-      // Truncate long addresses
-      const destination = roomDetails.destination;
-      if (destination.length > 30) {
-        return destination.substring(0, 30) + '...';
-      }
-      return destination;
-    }
-    return 'No destination set';
-  };
+const formattedDestination = React.useMemo(() => {
+  if (roomDetails?.destination) {
+    const destination = roomDetails.destination;
+    return destination.length > 30 ? destination.substring(0, 30) + '...' : destination;
+  }
+  return 'No destination set';
+}, [roomDetails?.destination]);
 
   return (
     <SafeAreaView style={styles.header} edges={['top', 'left', 'right']}>
@@ -62,27 +54,11 @@ export function RoomHeader({
           </Text>
           
           <Text style={styles.destination} numberOfLines={1}>
-            📍 {formatDestination(roomDetails)}
+            📍 {formattedDestination}
           </Text>
         </View>
         
         <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={onMessagesPress}
-            activeOpacity={0.7}
-          >
-            <MessageCircle size={20} color="#111827" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={onDirectionsPress}
-            activeOpacity={0.7}
-          >
-            <Navigation size={20} color="#111827" />
-          </TouchableOpacity>
-          
           <TouchableOpacity
             style={[
               styles.headerButton,
@@ -132,6 +108,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 2,
+    gap: 4,
   },
   roomName: {
     fontSize: 18,
@@ -143,8 +120,9 @@ const styles = StyleSheet.create({
   roomCodeContainer: {
     backgroundColor: '#8B5CF6',
     borderRadius: 6,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 2,
+    marginLeft: 4,
   },
   roomCode: {
     fontSize: 12,

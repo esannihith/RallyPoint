@@ -9,6 +9,8 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
   activeRoom: null,
   currentRoomLocations: [],
   chatMessages: [],
+  unreadCount: 0,
+  isChatOpen: false,
   isLoading: false,
   error: null,
 
@@ -337,9 +339,21 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
   },
 
   // Chat methods
+
   addChatMessage: (message: ChatMessage) => {
-    const { chatMessages } = get();
-    set({ chatMessages: [...chatMessages, message] });
+    const { chatMessages, isChatOpen, unreadCount } = get();
+    set({
+      chatMessages: [...chatMessages, message],
+      unreadCount: isChatOpen ? 0 : unreadCount + 1,
+    });
+  },
+
+  resetUnreadCount: () => {
+    set({ unreadCount: 0 });
+  },
+
+  setChatOpen: (open: boolean) => {
+    set({ isChatOpen: open, unreadCount: open ? 0 : get().unreadCount });
   },
 
   setChatMessages: (messages: ChatMessage[]) => {
