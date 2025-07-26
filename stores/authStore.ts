@@ -14,11 +14,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   isAuthenticated: false,
   isLoading: false,
 
-  signIn: async (name: string) => {
+  signIn: async (name: string, password: string) => {
     set({ isLoading: true });
     
     try {
-      const response = await apiService.signIn(name);
+      const response = await apiService.signIn(name, password);
       
       // Store token and user data locally
       await AsyncStorage.setItem(STORAGE_KEYS.TOKEN, response.token);
@@ -36,6 +36,46 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       } catch (socketError) {
         console.warn('Socket connection failed:', socketError);
         // Don't fail the sign-in if socket connection fails
+      }
+
+    } catch (error) {
+      set({ isLoading: false });
+      
+      // Handle different types of errors
+      if (error instanceof Error) {
+        if (error.message.includes('fetch') || error.message.includes('Network request failed')) {
+          throw new Error('Unable to connect to server. Please check your internet connection and try again.');
+        } else {
+          throw error;
+        }
+      } else {
+        throw new Error('An unexpected error occurred. Please try again.');
+      }
+    }
+  },
+
+  signUp: async (name: string, password: string) => {
+    set({ isLoading: true });
+    
+    try {
+      const response = await apiService.signUp(name, password);
+      
+      // Store token and user data locally
+      await AsyncStorage.setItem(STORAGE_KEYS.TOKEN, response.token);
+      await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.user));
+      
+      set({ 
+        user: response.user, 
+        isAuthenticated: true, 
+        isLoading: false 
+      });
+
+      // Connect to socket
+      try {
+        await socketService.connect(response.token);
+      } catch (socketError) {
+        console.warn('Socket connection failed:', socketError);
+        // Don't fail the sign-up if socket connection fails
       }
 
     } catch (error) {

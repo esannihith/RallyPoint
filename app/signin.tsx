@@ -12,15 +12,20 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, User } from 'lucide-react-native';
+import { ArrowLeft, User, Eye, EyeOff } from 'lucide-react-native';
 import { useAuthStore } from '@/stores/authStore';
 import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
 
 export default function SignInScreen() {
   const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signIn } = useAuthStore();
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { signIn, signUp } = useAuthStore();
 
   // Android back handler
   useAndroidBackHandler({
@@ -45,6 +50,36 @@ export default function SignInScreen() {
       return;
     }
 
+    if (!password.trim()) {
+      setError('Please enter your password');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    // Additional validation for sign-up
+    if (isSignUp) {
+      if (!confirmPassword.trim()) {
+        setError('Please confirm your password');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
+
+      // Password strength validation
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+      if (!passwordRegex.test(password)) {
+        setError('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+        return;
+      }
+    }
+
     // Network connectivity check
     const netState = await Network.getNetworkStateAsync();
     if (!netState.isConnected) {
@@ -54,15 +89,26 @@ export default function SignInScreen() {
 
     setIsLoading(true);
     setError(null);
+    
     try {
-      await signIn(name.trim());
-      router.back(); // Go back to previous screen after successful sign in
+      if (isSignUp) {
+        await signUp(name.trim(), password);
+      } else {
+        await signIn(name.trim(), password);
+      }
+      router.back(); // Go back to previous screen after successful authentication
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const toggleMode = () => {
+    setIsSignUp(!isSignUp);
+    setError(null);
+    setConfirmPassword('');
   };
 
   return (
@@ -76,7 +122,7 @@ export default function SignInScreen() {
         >
           <ArrowLeft size={24} color="#111827" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Sign In</Text>
+        <Text style={styles.headerTitle}>{isSignUp ? 'Sign Up' : 'Sign In'}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -91,7 +137,10 @@ export default function SignInScreen() {
 
           <Text style={styles.title}>Welcome to WeMaps</Text>
           <Text style={styles.subtitle}>
-            Enter your name to get started with group navigation
+            {isSignUp 
+              ? 'Create your account to get started with group navigation'
+              : 'Sign in to continue with group navigation'
+            }
           </Text>
 
           <View style={styles.inputContainer}>
@@ -110,9 +159,77 @@ export default function SignInScreen() {
               autoCorrect={false}
               maxLength={50}
               editable={!isLoading}
-              returnKeyType="done"
-              onSubmitEditing={handleSignIn}
+              returnKeyType="next"
             />
+            
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={[
+                  styles.passwordInput,
+                  error && styles.inputError
+                ]}
+                placeholder="Password"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (error) setError(null);
+                }}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                maxLength={100}
+                editable={!isLoading}
+                returnKeyType={isSignUp ? "next" : "done"}
+                onSubmitEditing={isSignUp ? undefined : handleSignIn}
+              />
+              <TouchableOpacity
+                style={styles.passwordToggle}
+                onPress={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
+              >
+                {showPassword ? (
+                  <EyeOff size={20} color="#6B7280" />
+                ) : (
+                  <Eye size={20} color="#6B7280" />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {isSignUp && (
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={[
+                    styles.passwordInput,
+                    error && styles.inputError
+                  ]}
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChangeText={(text) => {
+                    setConfirmPassword(text);
+                    if (error) setError(null);
+                  }}
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  maxLength={100}
+                  editable={!isLoading}
+                  returnKeyType="done"
+                  onSubmitEditing={handleSignIn}
+                />
+                <TouchableOpacity
+                  style={styles.passwordToggle}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  disabled={isLoading}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} color="#6B7280" />
+                  ) : (
+                    <Eye size={20} color="#6B7280" />
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+
             {error && (
               <Text style={styles.errorText}>{error}</Text>
             )}
@@ -121,21 +238,37 @@ export default function SignInScreen() {
           <TouchableOpacity
             style={[
               styles.signInButton,
-              (!name.trim() || isLoading) && styles.signInButtonDisabled
+              ((!name.trim() || !password.trim() || (isSignUp && !confirmPassword.trim())) || isLoading) && styles.signInButtonDisabled
             ]}
             onPress={handleSignIn}
-            disabled={!name.trim() || isLoading}
+            disabled={(!name.trim() || !password.trim() || (isSignUp && !confirmPassword.trim())) || isLoading}
             activeOpacity={0.8}
           >
             {isLoading ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <Text style={styles.signInButtonText}>Sign In</Text>
+              <Text style={styles.signInButtonText}>{isSignUp ? 'Sign Up' : 'Sign In'}</Text>
             )}
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={styles.toggleButton}
+            onPress={toggleMode}
+            disabled={isLoading}
+          >
+            <Text style={styles.toggleButtonText}>
+              {isSignUp 
+                ? 'Already have an account? Sign In'
+                : "Don't have an account? Sign Up"
+              }
+            </Text>
+          </TouchableOpacity>
+
           <Text style={styles.disclaimer}>
-            We&apos;ll create an account for you if this is your first time
+            {isSignUp 
+              ? 'By signing up, you agree to our terms and conditions'
+              : 'Welcome back! Sign in to continue your navigation journey'
+            }
           </Text>
         </View>
       </KeyboardAvoidingView>
@@ -216,6 +349,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111827',
     backgroundColor: '#FFFFFF',
+    marginBottom: 16,
+  },
+  passwordContainer: {
+    position: 'relative',
+    width: '100%',
+    marginBottom: 16,
+  },
+  passwordInput: {
+    width: '100%',
+    height: 56,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingRight: 50,
+    fontSize: 16,
+    color: '#111827',
+    backgroundColor: '#FFFFFF',
+  },
+  passwordToggle: {
+    position: 'absolute',
+    right: 16,
+    top: 18,
+    padding: 4,
   },
   inputError: {
     borderColor: '#EF4444',
@@ -252,6 +409,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  toggleButton: {
+    marginBottom: 24,
+    paddingVertical: 12,
+  },
+  toggleButtonText: {
+    fontSize: 14,
+    color: '#8B5CF6',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   disclaimer: {
     fontSize: 14,

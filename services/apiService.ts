@@ -44,14 +44,24 @@ class ApiService {
   }
 
   // Auth endpoints
-  async signIn(name: string) {
+  async signIn(name: string, password: string) {
     return this.makeRequest<{
       user: any;
       token: string;
       isNewUser: boolean;
     }>('/auth/signin', {
       method: 'POST',
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, password }),
+    });
+  }
+
+  async signUp(name: string, password: string) {
+    return this.makeRequest<{
+      user: any;
+      token: string;
+    }>('/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({ name, password }),
     });
   }
 
