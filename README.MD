@@ -10,7 +10,6 @@ WeMaps is a modern group navigation and communication app, designed to help peop
 - [Features](#features)
 - [Technologies Used](#technologies-used)
 - [Key Differentiators](#key-differentiators)
-- [Name Inspiration](#name-inspiration)
 - [How WeMaps Is Unique](#how-wemaps-is-unique)
 - [Image Gallery](#image-gallery)
 - [Backend](#backend)
@@ -27,7 +26,7 @@ WeMaps is a next-generation extension of Google Maps, designed for groups who wa
 
 ## Features
 
-- **User Authentication:** Simple name-based sign-in for quick access.
+- **User Authentication:** Name+password based sign-in and sign-up with secure password hashing.
 - **Location Services:** Interactive map, place search, and favorite locations.
 - **Directions & Navigation:** Turn-by-turn directions, multiple travel modes, and voice guidance.
 - **Seamless Route Selection:** In room-map, users can select a route to the room destination, then navigate with turn-by-turn instructions.
@@ -58,7 +57,7 @@ WeMaps is a next-generation extension of Google Maps, designed for groups who wa
 - **Real-time Group Chat:** Contextual chat integrated with navigation in a room.
 - **Live Location Tracking:** Optimized for dynamic group movement; view friends' locations while navigating.
 - **Seamless Tab Transitions:** Move between solo navigation and group views without losing context.
-- **Privacy:** No phone number required; sign in with name(current in development) or Google.
+- **Privacy:** No phone number required; sign in with name+password or Google authentication.
 - **Dedicated Group Rooms:** Private rooms for focused coordination.
 - **Integrated Experience:** Navigation and communication in one app.
 
@@ -73,7 +72,7 @@ WeMaps stands out from other popular apps by combining navigation, communication
 | **Group Navigation** | ✅ Built-in | ❌ Individual only | ❌ No navigation |
 | **Real-time Group Chat** | ✅ Contextual | ❌ No chat | ✅ General chat |
 | **Live Location Tracking** | ✅ Movement-optimized | ✅ Individual only | ✅ Static/basic |
-| **Privacy (No Phone Required)** | ✅ Name/Google sign-in | ✅ No account needed | ❌ Phone required |
+| **Privacy (No Phone Required)** | ✅ Name+password/Google sign-in | ✅ No account needed | ❌ Phone required |
 | **Dedicated Group Rooms** | ✅ Private rooms | ❌ No rooms | ✅ Group chats |
 | **Navigation + Communication** | ✅ Integrated | ❌ Separate apps needed | ❌ No navigation |
 

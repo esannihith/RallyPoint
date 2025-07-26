@@ -150,6 +150,7 @@ export default function SignInScreen() {
                 error && styles.inputError
               ]}
               placeholder="Your name"
+              placeholderTextColor="#8B5CF6"
               value={name}
               onChangeText={(text) => {
                 setName(text);
@@ -169,6 +170,7 @@ export default function SignInScreen() {
                   error && styles.inputError
                 ]}
                 placeholder="Password"
+                placeholderTextColor="#8B5CF6"
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);
@@ -188,9 +190,9 @@ export default function SignInScreen() {
                 disabled={isLoading}
               >
                 {showPassword ? (
-                  <EyeOff size={20} color="#6B7280" />
-                ) : (
                   <Eye size={20} color="#6B7280" />
+                ) : (
+                  <EyeOff size={20} color="#6B7280" />
                 )}
               </TouchableOpacity>
             </View>
@@ -203,6 +205,7 @@ export default function SignInScreen() {
                     error && styles.inputError
                   ]}
                   placeholder="Confirm Password"
+                  placeholderTextColor="#8B5CF6"
                   value={confirmPassword}
                   onChangeText={(text) => {
                     setConfirmPassword(text);
@@ -222,9 +225,9 @@ export default function SignInScreen() {
                   disabled={isLoading}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff size={20} color="#6B7280" />
-                  ) : (
                     <Eye size={20} color="#6B7280" />
+                  ) : (
+                    <EyeOff size={20} color="#6B7280" />
                   )}
                 </TouchableOpacity>
               </View>

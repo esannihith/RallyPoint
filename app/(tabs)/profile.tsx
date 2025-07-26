@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Settings, ChevronRight, Bell, Shield, CircleHelp as HelpCircle, LogOut, User } from 'lucide-react-native';
@@ -58,16 +57,9 @@ export default function ProfileScreen() {
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
-            {isAuthenticated ? (
-              <Image
-                source={{ uri: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400' }}
-                style={styles.avatar}
-              />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <User size={40} color="#9CA3AF" />
-              </View>
-            )}
+            <View style={styles.avatarPlaceholder}>
+              <User size={40} color="#8B5CF6" />
+            </View>
           </View>
           
           {isAuthenticated && user ? (
@@ -168,11 +160,6 @@ const styles = StyleSheet.create({
   avatarContainer: {
     position: 'relative',
     marginBottom: 16,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
   },
   avatarPlaceholder: {
     width: 80,
