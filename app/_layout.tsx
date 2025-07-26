@@ -42,13 +42,6 @@ export default function RootLayout() {
     }
   }, [isAuthenticated, user, loadRooms]);
 
-    // Pre-load messages for the active room as soon as the app starts and the user is in a room
-  useEffect(() => {
-    if (activeRoom && user) {
-      socketService.requestChatHistory(activeRoom.id);
-    }
-  }, [activeRoom, user]);
-
   useEffect(() => {
     let isMounted = true;
     async function prepareApp() {
