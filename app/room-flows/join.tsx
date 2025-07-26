@@ -71,6 +71,7 @@ export default function JoinRoomScreen() {
           {
             text: 'Go to Room',
             onPress: () => {
+              // Navigate to room-map (socket connection is handled by roomStore)
               router.replace({
                 pathname: '/(tabs)/rooms/room-map' as any,
                 params: { roomId: room.id }

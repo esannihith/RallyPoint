@@ -69,19 +69,12 @@ export default function RoomMapScreen() {
 
   const setupChatListeners = useCallback(() => {
     try {
-      socketService.onNewMessage((message) => {
-        addChatMessage(message);
-      });
-
-      socketService.onChatHistory((data) => {
-        setChatMessages(data.messages);
-      });
-
-      socketService.requestChatHistory(roomId);
+      // Chat listeners are now handled centrally in roomStore
+      // This function can be removed or used for room-specific chat handling
     } catch (error) {
       console.error('Error setting up chat listeners:', error);
     }
-  }, [roomId, addChatMessage, setChatMessages]);
+  }, [roomId]);
 
   // Process user markers for display
   useEffect(() => {
@@ -179,19 +172,6 @@ export default function RoomMapScreen() {
   const initializeRoom = useCallback(async () => {
     try {
       setIsLoading(true);
-      
-      if (socketService.isConnected) {
-        try {
-          await Promise.race([
-            socketService.joinRoom(roomId),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Socket join timeout')), 10000)
-            )
-          ]);
-        } catch (socketError) {
-          console.error('Socket join error:', socketError);
-        }
-      }
       
       if (activeRoom && activeRoom.id === roomId) {
         setRoomDetails({
@@ -520,12 +500,11 @@ export default function RoomMapScreen() {
     initializeRoom();
     setupLocationTracking();
     setupSocketListeners();
-    setupChatListeners();
     
     return () => {
       cleanup();
     };
-  }, [roomId, initializeRoom, setupLocationTracking, setupSocketListeners, setupChatListeners, cleanup]);
+  }, [roomId, initializeRoom, setupLocationTracking, setupSocketListeners, cleanup]);
 
   // Guard against missing roomId
   if (!roomId) {

@@ -58,6 +58,11 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
         isLoading: false 
       });
 
+      // Setup socket connection for active room if it exists
+      if (activeRoom) {
+        await _handleActiveRoomSocketConnection(activeRoom);
+      }
+
     } catch (error) {
       console.error('Load rooms error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to load rooms';
@@ -107,26 +112,8 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
         isLoading: false 
       });
 
-      // Join the room via socket
-      try {
-        await socketService.joinRoom(newRoom.id);
-        
-        // Set up enhanced socket listeners for real-time updates
-        socketService.onRoomLocations((data) => {
-          set({ currentRoomLocations: data.locations });
-        });
-        
-        socketService.onUserOffline((data) => {
-          const { currentRoomLocations } = get();
-          const updatedLocations = currentRoomLocations.filter(
-            loc => loc.userId !== data.userId
-          );
-          set({ currentRoomLocations: updatedLocations });
-        });
-        
-      } catch (socketError) {
-        console.warn('Failed to join room via socket:', socketError);
-      }
+      // Setup socket connection for the new active room
+      await _handleActiveRoomSocketConnection(newRoom);
 
       return newRoom;
 
@@ -175,26 +162,8 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
         isLoading: false 
       });
 
-      // Join the room via socket with enhanced listeners
-      try {
-        await socketService.joinRoom(joinedRoom.id);
-        
-        // Set up enhanced socket listeners for real-time updates
-        socketService.onRoomLocations((data) => {
-          set({ currentRoomLocations: data.locations });
-        });
-        
-        socketService.onUserOffline((data) => {
-          const { currentRoomLocations } = get();
-          const updatedLocations = currentRoomLocations.filter(
-            loc => loc.userId !== data.userId
-          );
-          set({ currentRoomLocations: updatedLocations });
-        });
-        
-      } catch (socketError) {
-        console.warn('Failed to join room via socket:', socketError);
-      }
+      // Setup socket connection for the joined active room
+      await _handleActiveRoomSocketConnection(joinedRoom);
 
       return joinedRoom;
 
@@ -234,8 +203,12 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
 
       // Leave room via socket and clean up listeners
       socketService.leaveRoom(roomId);
+      
+      // Clean up all socket listeners
       socketService.offRoomLocations();
       socketService.offUserOffline();
+      socketService.offNewMessage();
+      socketService.offChatHistory();
 
     } catch (error) {
       console.error('Leave room error:', error);
@@ -329,9 +302,11 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
   clearRoomLocations: () => {
     set({ currentRoomLocations: [] });
     
-    // Clean up socket listeners
+    // Clean up all socket listeners
     socketService.offRoomLocations();
     socketService.offUserOffline();
+    socketService.offNewMessage();
+    socketService.offChatHistory();
   },
 
   getCurrentRoomLocations: () => {
@@ -368,3 +343,42 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
     return get().chatMessages;
   },
 }));
+
+// Helper function to handle active room socket connection
+const _handleActiveRoomSocketConnection = async (activeRoom: Room) => {
+  if (!activeRoom || !socketService.isConnected) {
+    return;
+  }
+
+  try {
+    // Join the room via socket
+    await socketService.joinRoom(activeRoom.id);
+    
+    // Set up real-time location listeners
+    socketService.onRoomLocations((data) => {
+      useRoomStore.getState().updateUserLocation;
+      data.locations.forEach(locationData => {
+        useRoomStore.getState().updateUserLocation(locationData);
+      });
+    });
+    
+    socketService.onUserOffline((data) => {
+      useRoomStore.getState().removeUserLocation(data.userId);
+    });
+    
+    // Request chat history for the active room
+    socketService.requestChatHistory(activeRoom.id);
+    
+    // Set up chat listeners
+    socketService.onNewMessage((message) => {
+      useRoomStore.getState().addChatMessage(message);
+    });
+
+    socketService.onChatHistory((data) => {
+      useRoomStore.getState().setChatMessages(data.messages);
+    });
+    
+  } catch (error) {
+    console.warn('Failed to setup active room socket connection:', error);
+  }
+};

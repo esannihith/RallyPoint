@@ -235,7 +235,7 @@ export default function CreateRoomScreen() {
 
       const newRoom = await createRoom(roomData);
       
-      // Automatically navigate to room-map
+      // Navigate to room-map (socket connection is handled by roomStore)
       router.replace({
         pathname: '/(tabs)/rooms/room-map' as any,
         params: { roomId: newRoom.id }
