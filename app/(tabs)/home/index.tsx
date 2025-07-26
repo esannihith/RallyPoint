@@ -17,6 +17,7 @@ import { router } from 'expo-router';
 import { useLocationStore } from '@/stores/locationStore';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { PlaceDetailsBottomSheet } from '@/components/map';
+import { FloatingActionButtons } from '@/components/ui';
 // import { ApiDebugScreen } from '@/components/debug/ApiDebugScreen';
 import { saveUserLocation, getUserLocation } from '@/services/storageService';
 import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
@@ -63,6 +64,7 @@ export default function HomeScreen() {
 
   // Navigation store for potential future use
   useNavigationStore();
+  const { setChatOpen, resetUnreadCount } = useRoomStore();
 
   // Android back handler
   useAndroidBackHandler({
@@ -293,6 +295,11 @@ export default function HomeScreen() {
     router.push('/(tabs)/home/directions');
   }, []);
 
+  const handleChatPress = useCallback(() => {
+    setChatOpen(true);
+    resetUnreadCount();
+  }, [setChatOpen, resetUnreadCount]);
+
   const handleClearSelectedPlace = useCallback(() => {
     setSelectedPlace(null);
     setBottomSheetOpen(false);
@@ -408,39 +415,15 @@ export default function HomeScreen() {
         </View>
 
         {/* Floating Action Buttons */}
-        <View style={[
-          styles.floatingButtons,
-          { paddingBottom: tabBarHeight + 16 } // Dynamic padding based on tab bar height
-        ]}>
-          <TouchableOpacity
-            style={styles.fab}
-            onPress={handleMyLocationPress}
-            disabled={isLocationLoading}
-            activeOpacity={0.7}
-          >
-            {isLocationLoading ? (
-              <ActivityIndicator size="small" color="#8B5CF6" />
-            ) : (
-              <LocateFixed size={22} color="#374151" />
-            )}
-          </TouchableOpacity>
-          {/* Debug Button - Commented out for production
-          <TouchableOpacity
-            style={[styles.fab, { backgroundColor: '#FFA500' }]}
-            onPress={() => setShowDebugScreen(true)}
-            activeOpacity={0.7}
-          >
-            <Bug size={22} color="#FFFFFF" />
-          </TouchableOpacity>
-          */}
-          <TouchableOpacity
-            style={[styles.fab, styles.directionsButton]}
-            onPress={handleDirectionsPress}
-            activeOpacity={0.7}
-          >
-            <Navigation size={22} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+        <FloatingActionButtons
+          showMyLocation={true}
+          showDirections={true}
+          showChat={true}
+          onMyLocationPress={handleMyLocationPress}
+          onDirectionsPress={handleDirectionsPress}
+          onChatPress={handleChatPress}
+          isMyLocationLoading={isLocationLoading}
+        />
       </View>
 
       {/* Place Details Bottom Sheet - only show when open and place selected */}
@@ -544,33 +527,6 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
-  },
-  floatingButtons: {
-    alignSelf: 'flex-end',
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  fab: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 28,
-    width: 56,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  directionsButton: {
-    backgroundColor: '#8B5CF6',
-    borderColor: '#7C3AED',
   },
   /* Debug Modal Styles - Commented out for production
   debugModal: {

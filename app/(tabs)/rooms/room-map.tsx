@@ -19,7 +19,8 @@ import { socketService } from '@/services/socketService';
 import { getDeviceInfo } from '@/utils/deviceInfo';
 import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
 import { RoomHeader, RoomMap, BackModal } from '@/components/rooms';
-import { DirectionsFab } from '@/components/rooms/DirectionsFab';
+import { FloatingActionButtons } from '@/components/ui';
+import * as Location from 'expo-location';
 
 export default function RoomMapScreen() {
   const { roomId } = useLocalSearchParams<{ roomId: string }>();
@@ -446,8 +447,40 @@ export default function RoomMapScreen() {
     router.push('/(tabs)/home/routes');
   };
 
-  const handleMessagesPress = () => {
-    setShowChatModal(true);
+  const handleMyLocationPress = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Location permission is required to center the map on your location.'
+        );
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const newRegion = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+
+      if (mapRef.current) {
+        mapRef.current.animateToRegion(newRegion, 1000);
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+      Alert.alert('Error', 'Failed to get your current location. Please try again.');
+    }
+  };
+
+  const handleChatPress = () => {
+    setChatOpen(true);
+    resetUnreadCount();
   };
 
   const handleSendMessage = (content: string) => {
@@ -555,7 +588,14 @@ export default function RoomMapScreen() {
         }}
       />
 
-      <DirectionsFab onPress={handleDirectionsToRoomDestination} />
+      <FloatingActionButtons
+        showMyLocation={true}
+        showDirections={true}
+        showChat={true}
+        onMyLocationPress={handleMyLocationPress}
+        onDirectionsPress={handleDirectionsToRoomDestination}
+        onChatPress={handleChatPress}
+      />
     </View>
   );
 }
