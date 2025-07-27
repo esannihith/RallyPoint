@@ -62,7 +62,7 @@ export default function PlaceDetailsBottomSheet() {
 
 const styles = StyleSheet.create({
   bottomSheet: {
-    zIndex: 1000,
+    zIndex: 100, // Higher zIndex so it appears above FloatingActionButtons
   },
   bottomSheetBackground: {
     backgroundColor: '#FFFFFF',
