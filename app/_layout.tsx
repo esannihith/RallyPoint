@@ -38,13 +38,6 @@ export default function RootLayout() {
 
   const [appIsReady, setAppIsReady] = useState(false);
 
-  // Global room loading logic: load rooms on app start if authenticated
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      loadRooms();
-    }
-  }, [isAuthenticated, user, loadRooms]);
-
   useEffect(() => {
     let isMounted = true;
     async function prepareApp() {
@@ -66,6 +59,15 @@ export default function RootLayout() {
     prepareApp();
     return () => { isMounted = false; };
   }, []);
+
+   // Global room loading logic: load rooms on app start if authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadRooms();
+    }
+  }, [isAuthenticated, user, loadRooms]);
+
+  
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {

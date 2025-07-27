@@ -61,11 +61,17 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
       // Setup socket connection for active room if it exists
       if (activeRoom) {
         await _handleActiveRoomSocketConnection(activeRoom);
-        
-        // Request chat history for the active room
-        if (socketService.isConnected) {
-          socketService.requestChatHistory(activeRoom.id);
+        // Wait for socket connection before requesting chat history
+        if (!socketService.isConnected) {
+          await new Promise((resolve) => {
+            const onConnect = () => {
+              socketService?.offConnect(onConnect);
+              resolve(true);
+            };
+            socketService?.onConnect(onConnect);
+          });
         }
+        socketService.requestChatHistory(activeRoom.id);
       }
 
     } catch (error) {

@@ -1,3 +1,4 @@
+
 import { io, Socket } from 'socket.io-client';
 import { SocketEvents, LocationUpdateData, LocationData, RoomState, ChatMessage, SendMessageData } from '@/types/socket';
 
@@ -47,6 +48,15 @@ class SocketService {
 
       this.setupEventListeners();
     });
+  }
+
+    // Public connect event listeners
+  public onConnect(cb: () => void) {
+    this.socket?.on('connect', cb);
+  }
+
+  public offConnect(cb: () => void) {
+    this.socket?.off('connect', cb);
   }
 
   disconnect() {
