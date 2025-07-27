@@ -23,16 +23,19 @@ export interface SocketEvents {
 
 export interface ChatMessage {
   id: string;
+  clientTempId?: string;
   roomId: string;
   userId: string;
   userName: string;
   content: string;
   timestamp: string;
+  status?: 'sending' | 'sent' | 'delivered' | 'failed';
 }
 
 export interface SendMessageData {
   roomId: string;
   content: string;
+  clientTempId?: string;
 }
 
 export interface LocationUpdateData {

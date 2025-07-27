@@ -155,9 +155,9 @@ class SocketService {
   }
 
   // Chat operations
-  sendMessage(roomId: string, content: string) {
+  sendMessage(roomId: string, content: string, clientTempId?: string) {
     if (this.socket?.connected) {
-      const messageData: SendMessageData = { roomId, content };
+      const messageData: SendMessageData = { roomId, content, clientTempId };
       this.socket.emit('send-message', messageData);
     } else {
       console.warn('Socket not connected, cannot send message');

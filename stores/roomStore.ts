@@ -61,6 +61,11 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
       // Setup socket connection for active room if it exists
       if (activeRoom) {
         await _handleActiveRoomSocketConnection(activeRoom);
+        
+        // Request chat history for the active room
+        if (socketService.isConnected) {
+          socketService.requestChatHistory(activeRoom.id);
+        }
       }
 
     } catch (error) {
@@ -115,6 +120,11 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
       // Setup socket connection for the new active room
       await _handleActiveRoomSocketConnection(newRoom);
 
+      // Request chat history for the new room
+      if (socketService.isConnected) {
+        socketService.requestChatHistory(newRoom.id);
+      }
+
       return newRoom;
 
     } catch (error) {
@@ -164,6 +174,11 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
 
       // Setup socket connection for the joined active room
       await _handleActiveRoomSocketConnection(joinedRoom);
+
+      // Request chat history for the joined room
+      if (socketService.isConnected) {
+        socketService.requestChatHistory(joinedRoom.id);
+      }
 
       return joinedRoom;
 
@@ -317,6 +332,32 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
 
   addChatMessage: (message: ChatMessage) => {
     const { chatMessages, isChatOpen, unreadCount } = get();
+    
+    // Check if this is an update to an existing optimistic message
+    if (message.clientTempId) {
+      const existingIndex = chatMessages.findIndex(
+        msg => msg.clientTempId === message.clientTempId
+      );
+      
+      if (existingIndex !== -1) {
+        // Update existing optimistic message with server confirmation
+        const updatedMessages = [...chatMessages];
+        updatedMessages[existingIndex] = {
+          ...updatedMessages[existingIndex],
+          id: message.id,
+          timestamp: message.timestamp,
+          status: 'sent',
+        };
+        
+        set({
+          chatMessages: updatedMessages,
+          // Don't increment unread count for message updates
+        });
+        return;
+      }
+    }
+    
+    // Add new message (either from server or optimistic)
     set({
       chatMessages: [...chatMessages, message],
       unreadCount: isChatOpen ? 0 : unreadCount + 1,
