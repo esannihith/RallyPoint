@@ -42,6 +42,13 @@ export default function RootLayout() {
     }
   }, [isAuthenticated, user, loadRooms]);
 
+    // Pre-load messages for the active room as soon as the app starts and the user is in a room
+  useEffect(() => {
+    if (activeRoom && user) {
+      socketService.requestChatHistory(activeRoom.id);
+    }
+  }, [activeRoom, user]);
+
   useEffect(() => {
     let isMounted = true;
     async function prepareApp() {
@@ -91,15 +98,6 @@ export default function RootLayout() {
             messages={messages}
             onSendMessage={(content) => {
               socketService.sendMessage(activeRoom.id, content);
-              // Optionally, add the message locally for instant feedback
-              addChatMessage({
-                id: Date.now().toString(),
-                userId: user.id,
-                userName: user.name,
-                content,
-                timestamp: new Date().toISOString(),
-                roomId: activeRoom.id,
-              });
             }}
             currentUserId={user.id}
           />
