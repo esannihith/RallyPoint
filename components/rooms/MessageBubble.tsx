@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Check, CheckCheck, Clock } from 'lucide-react-native';
 import { ChatMessage } from '@/types/socket';
 
 interface MessageBubbleProps {
@@ -40,6 +41,22 @@ export function MessageBubble({ message, isCurrentUser }: MessageBubbleProps) {
           isCurrentUser ? styles.sentTimestamp : styles.receivedTimestamp
         ]}>
           {formatTime(message.timestamp)}
+          {isCurrentUser && (
+            <View style={styles.statusIcon}>
+              {message.status === 'sending' && (
+                <Clock size={12} color={isCurrentUser ? "rgba(255, 255, 255, 0.7)" : "#9CA3AF"} />
+              )}
+              {message.status === 'sent' && (
+                <Check size={12} color={isCurrentUser ? "rgba(255, 255, 255, 0.7)" : "#9CA3AF"} />
+              )}
+              {(message.status === 'delivered' || !message.status) && (
+                <CheckCheck size={12} color={isCurrentUser ? "rgba(255, 255, 255, 0.7)" : "#9CA3AF"} />
+              )}
+              {message.status === 'failed' && (
+                <Text style={[styles.failedIcon, { color: isCurrentUser ? "rgba(255, 255, 255, 0.7)" : "#EF4444" }]}>!</Text>
+              )}
+            </View>
+          )}
         </Text>
       </View>
     </View>
@@ -97,6 +114,8 @@ const styles = StyleSheet.create({
   },
   timestamp: {
     fontSize: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
     alignSelf: 'flex-end',
     fontWeight: '500',
   },
@@ -105,5 +124,14 @@ const styles = StyleSheet.create({
   },
   receivedTimestamp: {
     color: '#9CA3AF',
+  },
+  statusIcon: {
+    marginLeft: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  failedIcon: {
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });

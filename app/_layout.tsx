@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View } from 'react-native';
 import { ChatBubble } from '@/components/rooms/ChatBubble';
 import { ChatModal } from '@/components/rooms/ChatModal';
+import { ChatMessage } from '@/types/socket';
 import { useRoomStore } from '@/stores/roomStore';
 import { useAuthStore } from '@/stores/authStore';
 import { socketService } from '@/services/socketService';
@@ -41,13 +42,6 @@ export default function RootLayout() {
       loadRooms();
     }
   }, [isAuthenticated, user, loadRooms]);
-
-    // Pre-load messages for the active room as soon as the app starts and the user is in a room
-  useEffect(() => {
-    if (activeRoom && user) {
-      socketService.requestChatHistory(activeRoom.id);
-    }
-  }, [activeRoom, user]);
 
   useEffect(() => {
     let isMounted = true;
@@ -97,7 +91,24 @@ export default function RootLayout() {
             roomName={activeRoom.name}
             messages={messages}
             onSendMessage={(content) => {
-              socketService.sendMessage(activeRoom.id, content);
+              // Create optimistic message
+              const clientTempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              const optimisticMessage: ChatMessage = {
+                id: clientTempId, // Temporary ID
+                clientTempId,
+                roomId: activeRoom.id,
+                userId: user.id,
+                userName: user.name,
+                content,
+                timestamp: new Date().toISOString(),
+                status: 'sending',
+              };
+              
+              // Add optimistic message to local state
+              addChatMessage(optimisticMessage);
+              
+              // Send message to server with clientTempId
+              socketService.sendMessage(activeRoom.id, content, clientTempId);
             }}
             currentUserId={user.id}
           />
