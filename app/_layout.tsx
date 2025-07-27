@@ -12,7 +12,8 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
-import * as Updates from 'expo-updates';
+import * as Updates from 'expo-updates'
+import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 
 // Disable Reanimated strict mode warnings globally
 configureReanimatedLogger({
@@ -24,6 +25,7 @@ configureReanimatedLogger({
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  useFrameworkReady();
   const isChatOpen = useRoomStore((s) => s.isChatOpen);
   const setChatOpen = useRoomStore((s) => s.setChatOpen);
   const resetUnreadCount = useRoomStore((s) => s.resetUnreadCount);
