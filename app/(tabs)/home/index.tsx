@@ -12,7 +12,7 @@ import * as Location from 'expo-location';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Search, X /*, Bug*/ } from 'lucide-react-native';
 import { router } from 'expo-router';
-import { useLocationStore, useNavigationStore, useRoomStore } from '@/stores';
+import { useLocationStore, useRoomStore } from '@/stores';
 import { PlaceDetailsBottomSheet } from '@/components/map';
 import { FloatingActionButtons } from '@/components/ui';
 // import { ApiDebugScreen } from '@/components/debug/ApiDebugScreen';
@@ -59,8 +59,6 @@ export default function HomeScreen() {
     isBottomSheetOpen
   } = useLocationStore();
 
-  // Navigation store for potential future use
-  useNavigationStore();
   const { setChatOpen, resetUnreadCount } = useRoomStore();
 
   // Android back handler

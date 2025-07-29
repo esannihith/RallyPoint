@@ -15,6 +15,7 @@ import { X, Send } from 'lucide-react-native';
 import { ChatMessage } from '@/types/socket';
 import { MessageBubble } from './MessageBubble';
 
+
 interface ChatModalProps {
   visible: boolean;
   onClose: () => void;
@@ -23,6 +24,7 @@ interface ChatModalProps {
   messages: ChatMessage[];
   onSendMessage: (content: string) => void;
   currentUserId: string;
+  isChatHistoryLoading?: boolean;
 }
 
 export function ChatModal({
@@ -33,6 +35,7 @@ export function ChatModal({
   messages,
   onSendMessage,
   currentUserId,
+  isChatHistoryLoading = false,
 }: ChatModalProps) {
   const [messageText, setMessageText] = useState('');
   const flatListRef = useRef<FlatList>(null);
@@ -75,6 +78,18 @@ export function ChatModal({
     </View>
   );
 
+  const renderLoadingState = () => (
+    <View style={styles.emptyState}>
+      <View style={[styles.emptyStateIcon, { backgroundColor: '#E5E7EB' }]}> 
+        <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 32, color: '#8B5CF6' }}>⏳</Text>
+        </View>
+      </View>
+      <Text style={styles.emptyStateText}>Loading chat history...</Text>
+      <Text style={styles.emptyStateSubtext}>Please wait while we load your messages.</Text>
+    </View>
+  );
+
   return (
     <Modal
       visible={visible}
@@ -107,18 +122,22 @@ export function ChatModal({
 
         {/* Messages */}
         <View style={styles.messagesContainer}>
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            renderItem={renderMessage}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.messagesList}
-            ListEmptyComponent={renderEmptyState}
-            onContentSizeChange={() => {
-              flatListRef.current?.scrollToEnd({ animated: false });
-            }}
-          />
+          {isChatHistoryLoading ? (
+            renderLoadingState()
+          ) : (
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              renderItem={renderMessage}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.messagesList}
+              ListEmptyComponent={renderEmptyState}
+              onContentSizeChange={() => {
+                flatListRef.current?.scrollToEnd({ animated: false });
+              }}
+            />
+          )}
         </View>
 
         {/* Input */}
