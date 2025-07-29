@@ -394,16 +394,31 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
 // Helper function to handle active room socket connection
 const _handleActiveRoomSocketConnection = async (activeRoom: Room) => {
   if (!activeRoom || !socketService.isConnected) {
+    // Wait for socket connection if not connected
+    if (!socketService.isConnected) {
+      await new Promise((resolve) => {
+        const onConnect = () => {
+          socketService?.offConnect(onConnect);
+          resolve(true);
+        };
+        socketService?.onConnect(onConnect);
+      });
+    }
+  }
+
+  if (!activeRoom) {
     return;
   }
 
   try {
+    // Set loading state before requesting chat history
+    useRoomStore.getState().setChatHistoryLoading(true);
+    
     // Join the room via socket
     await socketService.joinRoom(activeRoom.id);
     
     // Set up real-time location listeners
     socketService.onRoomLocations((data) => {
-      useRoomStore.getState().updateUserLocation;
       data.locations.forEach(locationData => {
         useRoomStore.getState().updateUserLocation(locationData);
       });
@@ -413,9 +428,6 @@ const _handleActiveRoomSocketConnection = async (activeRoom: Room) => {
       useRoomStore.getState().removeUserLocation(data.userId);
     });
     
-    // Request chat history for the active room
-    socketService.requestChatHistory(activeRoom.id);
-    
     // Set up chat listeners
     socketService.onNewMessage((message) => {
       useRoomStore.getState().addChatMessage(message);
@@ -423,9 +435,14 @@ const _handleActiveRoomSocketConnection = async (activeRoom: Room) => {
 
     socketService.onChatHistory((data) => {
       useRoomStore.getState().setChatMessages(data.messages);
+      useRoomStore.getState().setChatHistoryLoading(false);
     });
+    
+    // Request chat history for the active room
+    socketService.requestChatHistory(activeRoom.id);
     
   } catch (error) {
     console.warn('Failed to setup active room socket connection:', error);
+    useRoomStore.getState().setChatHistoryLoading(false);
   }
 };

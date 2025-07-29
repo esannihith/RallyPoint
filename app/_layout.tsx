@@ -94,6 +94,7 @@ export default function RootLayout() {
             roomId={activeRoom.id}
             roomName={activeRoom.name}
             messages={messages}
+            isChatHistoryLoading={isChatHistoryLoading}
             onSendMessage={(content) => {
               // Create optimistic message
               const clientTempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

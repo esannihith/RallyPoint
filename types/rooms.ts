@@ -88,6 +88,10 @@ export interface RoomStore {
   getChatMessages: () => import('@/types/socket').ChatMessage[];
   resetUnreadCount: () => void;
   setChatOpen: (open: boolean) => void;
+  
+  // Chat loading state
+  isChatHistoryLoading: boolean;
+  setChatHistoryLoading: (loading: boolean) => void;
 }
 
 export interface DestinationLocation {
