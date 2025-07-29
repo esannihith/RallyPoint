@@ -12,20 +12,21 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
   unreadCount: 0,
   isChatOpen: false,
   isLoading: false,
+  isChatHistoryLoading: false,
   error: null,
+
+  setChatHistoryLoading: (loading: boolean) => {
+    set({ isChatHistoryLoading: loading });
+  },
 
   loadRooms: async () => {
     const currentState = get();
     if (currentState.isLoading) {
       return; // Prevent multiple simultaneous requests
     }
-    
     set({ isLoading: true, error: null });
-    
     try {
       const response = await apiService.getUserRooms();
-      
-      // Convert response rooms to proper Room objects with Date conversion
       const convertedRooms = response.rooms.map(room => ({
         id: room.id,
         name: room.name,
@@ -46,20 +47,17 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
         createdAt: new Date(room.createdAt),
         updatedAt: new Date(room.updatedAt),
       }));
-      
-      // Find active room (user can only be in one active room)
-      const activeRoom = convertedRooms.find(room => 
+      const activeRoom = convertedRooms.find(room =>
         room.status === 'active' && (room.userRole === 'owner' || room.userRole === 'member')
       ) || null;
-      
-      set({ 
-        rooms: convertedRooms, 
+      set({
+        rooms: convertedRooms,
         activeRoom,
-        isLoading: false 
+        isLoading: false
       });
-
       // Setup socket connection for active room if it exists
       if (activeRoom) {
+        get().setChatHistoryLoading(true);
         await _handleActiveRoomSocketConnection(activeRoom);
         // Wait for socket connection before requesting chat history
         if (!socketService.isConnected) {
@@ -73,20 +71,20 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
         }
         socketService.requestChatHistory(activeRoom.id);
       }
-
     } catch (error) {
       console.error('Load rooms error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to load rooms';
-      set({ 
-        error: errorMessage, 
-        isLoading: false 
+      set({
+        error: errorMessage,
+        isLoading: false
       });
+      get().setChatHistoryLoading(false);
     }
   },
 
   createRoom: async (roomData: CreateRoomRequest) => {
     set({ isLoading: true, error: null });
-    
+
     try {
       const response = await apiService.createRoom({
         name: roomData.name,
@@ -117,10 +115,10 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
       };
 
       const { rooms } = get();
-      set({ 
+      set({
         rooms: [newRoom, ...rooms],
         activeRoom: newRoom,
-        isLoading: false 
+        isLoading: false
       });
 
       // Setup socket connection for the new active room
@@ -136,9 +134,9 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
     } catch (error) {
       console.error('Create room error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to create room';
-      set({ 
-        error: errorMessage, 
-        isLoading: false 
+      set({
+        error: errorMessage,
+        isLoading: false
       });
       throw error;
     }
@@ -146,10 +144,10 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
 
   joinRoom: async (request: JoinRoomRequest) => {
     set({ isLoading: true, error: null });
-    
+
     try {
       const response = await apiService.joinRoom(request.joinCode!);
-      
+
       const joinedRoom: Room = {
         id: response.room.id,
         name: response.room.name,
@@ -171,11 +169,11 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
 
       const { rooms } = get();
       const updatedRooms = [joinedRoom, ...rooms.filter(r => r.id !== joinedRoom.id)];
-      
-      set({ 
+
+      set({
         rooms: updatedRooms,
         activeRoom: joinedRoom,
-        isLoading: false 
+        isLoading: false
       });
 
       // Setup socket connection for the joined active room
@@ -191,9 +189,9 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
     } catch (error) {
       console.error('Join room error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to join room';
-      set({ 
-        error: errorMessage, 
-        isLoading: false 
+      set({
+        error: errorMessage,
+        isLoading: false
       });
       throw error;
     }
@@ -201,12 +199,12 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
 
   leaveRoom: async (roomId: string) => {
     set({ isLoading: true, error: null });
-    
+
     try {
       await apiService.leaveRoom(roomId);
 
       const { rooms, activeRoom } = get();
-      const updatedRooms = rooms.map(room => 
+      const updatedRooms = rooms.map(room =>
         room.id === roomId ? { ...room, isActive: false } : room
       );
 
@@ -215,16 +213,16 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
         newActiveRoom = null;
       }
 
-      set({ 
+      set({
         rooms: updatedRooms,
         activeRoom: newActiveRoom,
         currentRoomLocations: [],
-        isLoading: false 
+        isLoading: false
       });
 
       // Leave room via socket and clean up listeners
       socketService.leaveRoom(roomId);
-      
+
       // Clean up all socket listeners
       socketService.offRoomLocations();
       socketService.offUserOffline();
@@ -234,9 +232,9 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
     } catch (error) {
       console.error('Leave room error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to leave room';
-      set({ 
-        error: errorMessage, 
-        isLoading: false 
+      set({
+        error: errorMessage,
+        isLoading: false
       });
       throw error;
     }
@@ -279,14 +277,14 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
   // Enhanced real-time location methods
   updateUserLocation: (locationData: LocationData) => {
     const { currentRoomLocations } = get();
-    
+
     // console.log('RoomStore: Updating user location:', locationData);
-    
+
     // Find existing location and update or add new one
     const existingIndex = currentRoomLocations.findIndex(
       loc => loc.userId === locationData.userId
     );
-    
+
     let updatedLocations;
     if (existingIndex >= 0) {
       // Update existing location with smooth transition
@@ -299,14 +297,14 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
       // console.log('RoomStore: Updated existing location for user:', locationData.userId);
     } else {
       // Add new location
-      updatedLocations = [...currentRoomLocations, { 
-        ...locationData, 
+      updatedLocations = [...currentRoomLocations, {
+        ...locationData,
         timestamp: locationData.timestamp || new Date().toISOString(),
-        isLive: true 
+        isLive: true
       }];
       // console.log('RoomStore: Added new location for user:', locationData.userId);
     }
-    
+
     // console.log('RoomStore: Total locations after update:', updatedLocations.length);
     set({ currentRoomLocations: updatedLocations });
   },
@@ -316,13 +314,13 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
     const updatedLocations = currentRoomLocations.filter(
       loc => loc.userId !== userId
     );
-    
+
     set({ currentRoomLocations: updatedLocations });
   },
 
   clearRoomLocations: () => {
     set({ currentRoomLocations: [] });
-    
+
     // Clean up all socket listeners
     socketService.offRoomLocations();
     socketService.offUserOffline();
@@ -338,13 +336,13 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
 
   addChatMessage: (message: ChatMessage) => {
     const { chatMessages, isChatOpen, unreadCount } = get();
-    
+
     // Check if this is an update to an existing optimistic message
     if (message.clientTempId) {
       const existingIndex = chatMessages.findIndex(
         msg => msg.clientTempId === message.clientTempId
       );
-      
+
       if (existingIndex !== -1) {
         // Update existing optimistic message with server confirmation
         const updatedMessages = [...chatMessages];
@@ -354,7 +352,7 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
           timestamp: message.timestamp,
           status: 'sent',
         };
-        
+
         set({
           chatMessages: updatedMessages,
           // Don't increment unread count for message updates
@@ -362,7 +360,7 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
         return;
       }
     }
-    
+
     // Add new message (either from server or optimistic)
     set({
       chatMessages: [...chatMessages, message],
@@ -413,21 +411,21 @@ const _handleActiveRoomSocketConnection = async (activeRoom: Room) => {
   try {
     // Set loading state before requesting chat history
     useRoomStore.getState().setChatHistoryLoading(true);
-    
+
     // Join the room via socket
     await socketService.joinRoom(activeRoom.id);
-    
+
     // Set up real-time location listeners
     socketService.onRoomLocations((data) => {
       data.locations.forEach(locationData => {
         useRoomStore.getState().updateUserLocation(locationData);
       });
     });
-    
+
     socketService.onUserOffline((data) => {
       useRoomStore.getState().removeUserLocation(data.userId);
     });
-    
+
     // Set up chat listeners
     socketService.onNewMessage((message) => {
       useRoomStore.getState().addChatMessage(message);
@@ -437,10 +435,10 @@ const _handleActiveRoomSocketConnection = async (activeRoom: Room) => {
       useRoomStore.getState().setChatMessages(data.messages);
       useRoomStore.getState().setChatHistoryLoading(false);
     });
-    
+
     // Request chat history for the active room
     socketService.requestChatHistory(activeRoom.id);
-    
+
   } catch (error) {
     console.warn('Failed to setup active room socket connection:', error);
     useRoomStore.getState().setChatHistoryLoading(false);

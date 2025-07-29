@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View } from 'react-native';
-import { ChatBubble } from '@/components/rooms/ChatBubble';
-import { ChatModal } from '@/components/rooms/ChatModal';
+import { ChatBubble } from '@/components/chat/ChatBubble';
+import { ChatModal } from '@/components/chat/ChatModal';
 import { ChatMessage } from '@/types/socket';
 import { useRoomStore } from '@/stores/roomStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -32,6 +31,7 @@ export default function RootLayout() {
   const activeRoom = useRoomStore((s) => s.activeRoom);
   const messages = useRoomStore((s) => s.chatMessages);
   const addChatMessage = useRoomStore((s) => s.addChatMessage);
+  const isChatHistoryLoading = useRoomStore((s) => s.isChatHistoryLoading);
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const loadRooms = useRoomStore((s) => s.loadRooms);
