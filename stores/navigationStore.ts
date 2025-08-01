@@ -2,10 +2,12 @@ import { create } from 'zustand';
 import { NavigationState, NavigationRoute, NavigationProgress, NavigationLocation } from '@/types';
 import { calculateDistance } from '@/services/mapboxService';
 
+export const useNavigationStore = create<NavigationState>((set, get) => ({
   isNavigating: false,
   isPaused: false,
   route: null,
   currentLocation: null,
+  isMuted: false,
   
   
   // Directions mode properties
@@ -18,17 +20,24 @@ import { calculateDistance } from '@/services/mapboxService';
       isNavigating: true,
       isPaused: false,
       route,
-        distanceRemaining: route.distance,
+      distanceRemaining: route.distance,
+    });
+  },
 
   toggleMute: () =>
     set(state => ({ isMuted: !state.isMuted })),
 
   pauseNavigation: () => {
     set({ isPaused: true });
+  },
+
+  stopNavigation: () => {
+    set({
       isNavigating: false,
       isPaused: false,
       route: null,
       currentLocation: null,
+    });
   },
 
   updateLocation: (location) => {
