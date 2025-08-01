@@ -40,7 +40,7 @@ export default {
       "expo-router",
       "expo-font",
       "expo-web-browser",
-      // Fixed: Removed duplicate expo-location plugin
+
       [
         "expo-location"
       ],
