@@ -63,9 +63,7 @@ export default {
       checkAutomatically: "ON_LOAD",
       fallbackToCacheTimeout: 0
     },
-    runtimeVersion: {
-      policy: "appVersion"
-    },
+    runtimeVersion: "1.0.0",
     experiments: {
       typedRoutes: true
     }
