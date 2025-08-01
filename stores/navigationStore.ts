@@ -6,6 +6,7 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
   isNavigating: false,
   isPaused: false,
   route: null,
+  progress: null,
   currentLocation: null,
   isMuted: false,
   
@@ -20,7 +21,6 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
       isNavigating: true,
       isPaused: false,
       route,
-      distanceRemaining: route.distance,
     });
   },
 
@@ -44,6 +44,10 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
     const state = get();
     set({ currentLocation: location });
     // Calculate navigation progress if we're actively navigating
+  },
+
+  updateProgress: (progress: NavigationProgress) => {
+    set({ progress });
   },
 
   // Directions actions

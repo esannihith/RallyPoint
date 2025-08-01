@@ -64,7 +64,9 @@ export interface NavigationProgress {
 
 export interface NavigationState {
   isNavigating: boolean;
+  isPaused: boolean;
   route: NavigationRoute | null;
+  progress: NavigationProgress | null;
   currentLocation: {
     latitude: number;
     longitude: number;
@@ -87,6 +89,7 @@ export interface NavigationState {
     bearing: number;
     speed: number;
   }) => void;
+  updateProgress: (progress: NavigationProgress) => void;
   toggleMute: () => void;
   
   // Directions actions

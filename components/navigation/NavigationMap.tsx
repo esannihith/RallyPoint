@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { StyleSheet, Dimensions, View, TouchableOpacity } from 'react-native';
-import Mapbox, { MapView, Camera, LocationPuck, ShapeSource, LineLayer } from '@rnmapbox/maps';
+import Mapbox, { MapView, Camera, LocationPuck, ShapeSource, LineLayer, UserTrackingMode } from '@rnmapbox/maps';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { Compass } from 'lucide-react-native';
 
@@ -75,7 +75,7 @@ export function NavigationMap() {
         <Camera
           ref={cameraRef}
           followUserLocation={isFollowing}
-          followUserMode="compass"
+          followUserMode={UserTrackingMode.FollowWithHeading}
           followZoomLevel={18}
           followPitch={60}
         />
