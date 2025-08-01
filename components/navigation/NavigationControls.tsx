@@ -6,22 +6,22 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { X, Navigation, Leaf } from 'lucide-react-native';
-import { useNavigationStore } from '@/stores/navigationStore';
 import { formatDuration, formatDistance } from '@/services/mapboxService';
 
 interface NavigationControlsProps {
   onStop: () => void;
+  progress?: any;
 }
 
-export function NavigationControls({ onStop }: NavigationControlsProps) {
-  const { progress } = useNavigationStore();
+export function NavigationControls({ onStop, progress }: NavigationControlsProps) {
 
   // Calculate arrival time
   const getArrivalTime = () => {
     if (!progress) return '';
     
     const now = new Date();
-    const arrivalTime = new Date(now.getTime() + (progress.durationRemaining * 1000));
+    const durationRemaining = progress.durationRemaining || progress.duration || 0;
+    const arrivalTime = new Date(now.getTime() + (durationRemaining * 1000));
     return arrivalTime.toLocaleTimeString('en-US', { 
       hour: 'numeric', 
       minute: '2-digit',
@@ -29,6 +29,17 @@ export function NavigationControls({ onStop }: NavigationControlsProps) {
     });
   };
 
+  // Get distance remaining
+  const getDistanceRemaining = () => {
+    if (!progress) return '-- km';
+    return formatDistance(progress.distanceRemaining || progress.distance || 0);
+  };
+
+  // Get duration remaining
+  const getDurationRemaining = () => {
+    if (!progress) return '-- min';
+    return formatDuration(progress.durationRemaining || progress.duration || 0);
+  };
   return (
     <View style={styles.container}>
       {/* Drag indicator */}
@@ -48,7 +59,7 @@ export function NavigationControls({ onStop }: NavigationControlsProps) {
         <View style={styles.routeInfo}>
           <View style={styles.timeContainer}>
             <Text style={styles.timeText}>
-              {progress ? formatDuration(progress.durationRemaining) : '-- min'}
+              {getDurationRemaining()}
             </Text>
             <View style={styles.ecoContainer}>
               <Leaf size={16} color="#10B981" />
@@ -57,7 +68,7 @@ export function NavigationControls({ onStop }: NavigationControlsProps) {
           
           <View style={styles.detailsContainer}>
             <Text style={styles.distanceText}>
-              {progress ? formatDistance(progress.distanceRemaining) : '-- km'}
+              {getDistanceRemaining()}
             </Text>
             <Text style={styles.separator}>•</Text>
             <Text style={styles.arrivalText}>

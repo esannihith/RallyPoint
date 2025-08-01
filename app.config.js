@@ -43,6 +43,13 @@ export default {
       // Fixed: Removed duplicate expo-location plugin
       [
         "expo-location"
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          RNMapboxMapsImpl: "mapbox",
+          RNMapboxMapsDownloadToken: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN
+        }
       ]
     ],
 

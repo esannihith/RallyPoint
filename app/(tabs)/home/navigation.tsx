@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import * as Location from 'expo-location';
+import Mapbox from '@rnmapbox/maps';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { getNavigationRoute } from '@/services/mapboxService';
 import { NavigationInstructions } from '@/components/navigation/NavigationInstructions';
@@ -17,11 +17,15 @@ import { NavigationControls } from '@/components/navigation/NavigationControls';
 import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
 import { LoadingSpinner } from '@/components/ui';
 
+// Set Mapbox access token
+Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '');
+
 export default function NavigationScreen() {
   const params = useLocalSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const locationSubscription = useRef<Location.LocationSubscription | null>(null);
+  const [navigationProgress, setNavigationProgress] = useState<any>(null);
+  const [currentInstruction, setCurrentInstruction] = useState<any>(null);
   
   const {
     startNavigation,
@@ -32,17 +36,13 @@ export default function NavigationScreen() {
 
   // Stable cleanup function
   const cleanup = useCallback(() => {
-    if (locationSubscription.current) {
-      locationSubscription.current.remove();
-      locationSubscription.current = null;
-    }
+    // Cleanup will be handled by Mapbox SDK
   }, []);
 
   // Stable stop navigation handler
   const handleStopNavigation = useCallback(() => {
     cleanup();
-    clearNavigation(); // Clear all navigation state including directions
-    // Navigate back to home tab
+    clearNavigation();
     router.replace('/(tabs)/home');
   }, [cleanup, clearNavigation]);
 
@@ -53,35 +53,6 @@ export default function NavigationScreen() {
       return true;
     }
   });
-
-  const startLocationTracking = useCallback(async () => {
-    try {
-      // Stop any existing subscription
-      if (locationSubscription.current) {
-        locationSubscription.current.remove();
-      }
-
-      locationSubscription.current = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.BestForNavigation,
-          timeInterval: 1000, // Update every second
-          distanceInterval: 5, // Update every 5 meters
-        },
-        (location) => {
-          const { latitude, longitude, heading, speed } = location.coords;
-          
-          updateLocation({
-            latitude,
-            longitude,
-            bearing: heading || 0,
-            speed: speed || 0,
-          });
-        }
-      );
-    } catch (error) {
-      console.error('Location tracking error:', error);
-    }
-  }, [updateLocation]);
 
   const initializeNavigation = useCallback(async () => {
     try {
@@ -99,13 +70,7 @@ export default function NavigationScreen() {
         throw new Error('Invalid route coordinates');
       }
 
-      // Request location permissions
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        throw new Error('Location permission is required for navigation');
-      }
-
-      // Get navigation route
+      // Get navigation route from Mapbox
       const navigationRoute = await getNavigationRoute(
         { latitude: originLat, longitude: originLng },
         { latitude: destLat, longitude: destLng },
@@ -116,10 +81,7 @@ export default function NavigationScreen() {
         throw new Error('Could not find a route');
       }
 
-      // Start location tracking
-      await startLocationTracking();
-
-      // Start navigation
+      // Start navigation with the route
       startNavigation(navigationRoute);
 
     } catch (error) {
@@ -128,14 +90,34 @@ export default function NavigationScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [params.originLat, params.originLng, params.destLat, params.destLng, params.travelMode, startLocationTracking, startNavigation]);
-
+  }, [params.originLat, params.originLng, params.destLat, params.destLng, params.travelMode, startNavigation]);
 
   useEffect(() => {
     initializeNavigation();
     return cleanup;
   }, [initializeNavigation, cleanup]);
 
+  // Handle location updates from Mapbox
+  const handleLocationUpdate = useCallback((location: any) => {
+    if (location?.coords) {
+      updateLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        bearing: location.coords.heading || 0,
+        speed: location.coords.speed || 0,
+      });
+    }
+  }, [updateLocation]);
+
+  // Handle navigation progress updates
+  const handleProgressUpdate = useCallback((progress: any) => {
+    setNavigationProgress(progress);
+  }, []);
+
+  // Handle instruction updates
+  const handleInstructionUpdate = useCallback((instruction: any) => {
+    setCurrentInstruction(instruction);
+  }, []);
 
   if (isLoading) {
     return (
@@ -173,12 +155,18 @@ export default function NavigationScreen() {
       
       {/* Navigation Instructions - Top overlay */}
       <View style={styles.instructionsContainer}>
-        <NavigationInstructions />
+        <NavigationInstructions 
+          progress={navigationProgress}
+          currentInstruction={currentInstruction}
+        />
       </View>
       
       {/* Navigation Controls - Bottom overlay */}
       <View style={styles.controlsContainer}>
-        <NavigationControls onStop={handleStopNavigation} />
+        <NavigationControls 
+          onStop={handleStopNavigation}
+          progress={navigationProgress}
+        />
       </View>
     </SafeAreaView>
   );
@@ -191,14 +179,14 @@ const styles = StyleSheet.create({
   },
   instructionsContainer: {
     position: 'absolute',
-    top: 16, // Fixed padding from SafeAreaView top
+    top: 16,
     left: 16,
     right: 16,
     zIndex: 1000,
   },
   controlsContainer: {
     position: 'absolute',
-    bottom: 0, // SafeAreaView handles bottom padding
+    bottom: 0,
     left: 0,
     right: 0,
     zIndex: 999,

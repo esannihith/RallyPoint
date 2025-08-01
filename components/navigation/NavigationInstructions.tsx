@@ -3,41 +3,47 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Mic, MicOff } from 'lucide-react-native';
 import * as Speech from 'expo-speech';
 import { useNavigationStore } from '@/stores/navigationStore';
-import { calculateDistance, getManeuverIcon } from '@/services/mapboxService';
+import { getManeuverIcon } from '@/services/mapboxService';
 
-export function NavigationInstructions() {
-  const { progress, currentLocation, isMuted, toggleMute } = useNavigationStore();
+interface NavigationInstructionsProps {
+  progress?: any;
+  currentInstruction?: any;
+}
+
+export function NavigationInstructions({ progress, currentInstruction }: NavigationInstructionsProps) {
+  const { isMuted, toggleMute } = useNavigationStore();
   const lastInstructionRef = useRef<string>('');
   const speechTimeoutRef = useRef<number | null>(null);
 
-  const navigationData = useMemo(() => {
-    if (!progress?.currentStep || !currentLocation) {
-      return null;
+  // Format instruction text from Mapbox SDK data
+  const getInstructionText = () => {
+    if (!currentInstruction) return 'Continue straight';
+    
+    // Extract instruction text from Mapbox SDK format
+    if (currentInstruction.primaryText) {
+      return currentInstruction.primaryText;
     }
+    
+    if (currentInstruction.instruction) {
+      return currentInstruction.instruction;
+    }
+    
+    return 'Continue straight';
+  };
 
-    const { currentStep, nextStep, upcomingStep } = progress;
+  // Get maneuver type for icon
+  const getManeuverType = () => {
+    if (!currentInstruction) return 'continue';
+    
+    return currentInstruction.maneuverType || currentInstruction.type || 'continue';
+  };
 
-    // Determine if current step is non-maneuver straight
-    const lower = currentStep.instruction.toLowerCase();
-    const isStraight = lower.includes('straight') || lower.includes('travel');
-    const isHeadContinue = lower.includes('head') || lower.includes('continue');
-    const isDepartArrive = ['depart', 'arrive'].includes(currentStep.maneuver.type);
-    const isNonManeuver = (isDepartArrive || isHeadContinue) && !isStraight;
-
-    // Promote nextStep if needed
-    const primaryStep = isNonManeuver && nextStep ? nextStep : currentStep;
-    const previewStep = isNonManeuver ? upcomingStep : nextStep;
-
-    // Calculate distance
-    const [lng, lat] = primaryStep.maneuver.location;
-    const { latitude: uLat, longitude: uLng } = currentLocation;
-    const dist = calculateDistance(uLat, uLng, lat, lng);
-    const roundedDist = dist < 1000 ? `${Math.round(dist)} m` : `${(dist / 1000).toFixed(1)} km`;
-
-    const primaryText = `In ${roundedDist}, ${primaryStep.instruction}`;
-
-    return { primaryStep, previewStep, primaryText };
-  }, [progress, currentLocation]);
+  // Get maneuver modifier for icon
+  const getManeuverModifier = () => {
+    if (!currentInstruction) return undefined;
+    
+    return currentInstruction.maneuverModifier || currentInstruction.modifier;
+  };
 
   // Debounced speech function to prevent rapid repeated instructions
   const debouncedSpeak = useCallback((text: string) => {
@@ -60,8 +66,9 @@ export function NavigationInstructions() {
 
   // Speak instruction if not muted (with debouncing)
   React.useEffect(() => {
-    if (navigationData?.primaryText) {
-      debouncedSpeak(navigationData.primaryText);
+    const instructionText = getInstructionText();
+    if (instructionText) {
+      debouncedSpeak(instructionText);
     }
     
     // Cleanup timeout on unmount
@@ -70,13 +77,13 @@ export function NavigationInstructions() {
         clearTimeout(speechTimeoutRef.current);
       }
     };
-  }, [navigationData, debouncedSpeak]);
+  }, [currentInstruction, debouncedSpeak]);
 
-  if (!navigationData) {
+  if (!currentInstruction) {
     return null;
   }
 
-  const { primaryStep, previewStep, primaryText } = navigationData;
+  const instructionText = getInstructionText();
 
   return (
     <View style={styles.container}>
@@ -84,12 +91,12 @@ export function NavigationInstructions() {
         <View style={styles.mainInstruction}>
           <View style={styles.arrowContainer}>
             <Text style={styles.maneuverIcon}>
-              {getManeuverIcon(primaryStep.maneuver.type, primaryStep.maneuver.modifier)}
+              {getManeuverIcon(getManeuverType(), getManeuverModifier())}
             </Text>
           </View>
 
           <View style={styles.instructionContent}>
-            <Text style={styles.primaryInstructionText}>{primaryText}</Text>
+            <Text style={styles.primaryInstructionText}>{instructionText}</Text>
           </View>
 
           <TouchableOpacity
@@ -106,9 +113,9 @@ export function NavigationInstructions() {
         </View>
       </View>
 
-      {previewStep && (
+      {currentInstruction?.nextInstruction && (
         <View style={styles.nextCard}>
-          <Text style={styles.nextText}>Then, {previewStep.instruction}</Text>
+          <Text style={styles.nextText}>Then, {currentInstruction.nextInstruction}</Text>
         </View>
       )}
     </View>

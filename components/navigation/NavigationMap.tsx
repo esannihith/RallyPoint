@@ -1,55 +1,63 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { StyleSheet, Dimensions, View, TouchableOpacity } from 'react-native';
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
-import polyline from '@mapbox/polyline';
+import Mapbox, { MapView, Camera, LocationPuck, ShapeSource, LineLayer } from '@rnmapbox/maps';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { Compass } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
+// Set Mapbox access token
+Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '');
+
 export function NavigationMap() {
   const mapRef = useRef<MapView>(null);
+  const cameraRef = useRef<Camera>(null);
   const { route, currentLocation } = useNavigationStore();
+  const [isFollowing, setIsFollowing] = useState(true);
 
   // Follow user location and bearing
   useEffect(() => {
-    if (currentLocation && mapRef.current) {
-      mapRef.current.animateCamera(
-        {
-          center: {
-            latitude: currentLocation.latitude,
-            longitude: currentLocation.longitude,
-          },
-          heading: currentLocation.bearing,
-          pitch: 60,
-          zoom: 18,
-        },
-        { duration: 1000 }
-      );
+    if (currentLocation && cameraRef.current && isFollowing) {
+      cameraRef.current.setCamera({
+        centerCoordinate: [currentLocation.longitude, currentLocation.latitude],
+        heading: currentLocation.bearing,
+        pitch: 60,
+        zoomLevel: 18,
+        animationDuration: 1000,
+      });
     }
-  }, [currentLocation]);
+  }, [currentLocation, isFollowing]);
 
   if (!route) return null;
 
-  // Decode route geometry
-  const routeCoordinates = polyline.decode(route.geometry).map(([lat, lng]: [number, number]) => ({ latitude: lat, longitude: lng }));
+  // Create GeoJSON for the route
+  const routeGeoJSON = {
+    type: 'Feature' as const,
+    properties: {},
+    geometry: {
+      type: 'LineString' as const,
+      coordinates: route.geometry ? 
+        require('@mapbox/polyline').decode(route.geometry).map(([lat, lng]: [number, number]) => [lng, lat]) :
+        []
+    }
+  };
 
   // Recenter & reorient map
   const handleRecenter = () => {
-    if (currentLocation && mapRef.current) {
-      mapRef.current.animateCamera(
-        {
-          center: {
-            latitude: currentLocation.latitude,
-            longitude: currentLocation.longitude,
-          },
-          heading: currentLocation.bearing,
-          pitch: 60,
-          zoom: 18,
-        },
-        { duration: 500 }
-      );
+    if (currentLocation && cameraRef.current) {
+      setIsFollowing(true);
+      cameraRef.current.setCamera({
+        centerCoordinate: [currentLocation.longitude, currentLocation.latitude],
+        heading: currentLocation.bearing,
+        pitch: 60,
+        zoomLevel: 18,
+        animationDuration: 500,
+      });
     }
+  };
+
+  const handleMapPress = () => {
+    setIsFollowing(false);
   };
 
   return (
@@ -57,189 +65,62 @@ export function NavigationMap() {
       <MapView
         ref={mapRef}
         style={styles.map}
-        provider={PROVIDER_GOOGLE}
-        mapType="standard"
-        showsUserLocation={false}
-        showsMyLocationButton={false}
-        showsCompass={false}
-        showsScale={false}
-        showsBuildings={true}
-        showsTraffic={false}
-        followsUserLocation={false}
-        rotateEnabled={true}
-        pitchEnabled={true}
-        scrollEnabled={true}
-        zoomEnabled={true}
-        loadingEnabled={true}
-        loadingIndicatorColor="#3B82F6"
-        customMapStyle={navigationMapStyle}
+        styleURL="mapbox://styles/mapbox/navigation-night-v1"
+        onPress={handleMapPress}
+        compassEnabled={false}
+        scaleBarEnabled={false}
+        attributionEnabled={false}
+        logoEnabled={false}
       >
-        <Polyline coordinates={routeCoordinates} strokeColor="#FFFFFF" strokeWidth={12} lineCap="round" lineJoin="round" />
-        <Polyline coordinates={routeCoordinates} strokeColor="#1E40AF" strokeWidth={8} lineCap="round" lineJoin="round" />
+        <Camera
+          ref={cameraRef}
+          followUserLocation={isFollowing}
+          followUserMode="compass"
+          followZoomLevel={18}
+          followPitch={60}
+        />
 
-        {currentLocation && (
-          <Marker
-            coordinate={{ latitude: currentLocation.latitude, longitude: currentLocation.longitude }}
-            anchor={{ x: 0.5, y: 0.5 }}
-            flat
-            rotation={currentLocation.bearing}
-          >
-            <View style={styles.userLocationContainer}>
-              <View style={styles.userLocationPulse} />
-              <View style={styles.userLocationDot} />
-            </View>
-          </Marker>
-        )}
+        {/* Location Puck for user position */}
+        <LocationPuck
+          puckBearingEnabled
+          puckBearing="heading"
+          visible={true}
+        />
 
-        {routeCoordinates.length > 0 && (
-          <Marker coordinate={routeCoordinates[routeCoordinates.length - 1]} title="Destination">
-            <View style={styles.destinationMarker}>
-              <View style={styles.destinationPin} />
-            </View>
-          </Marker>
-        )}
+        {/* Route Line */}
+        <ShapeSource id="routeSource" shape={routeGeoJSON}>
+          <LineLayer
+            id="routeLine"
+            style={{
+              lineColor: '#1E40AF',
+              lineWidth: 8,
+              lineCap: 'round',
+              lineJoin: 'round',
+            }}
+          />
+          <LineLayer
+            id="routeLineOutline"
+            style={{
+              lineColor: '#FFFFFF',
+              lineWidth: 12,
+              lineCap: 'round',
+              lineJoin: 'round',
+            }}
+            belowLayerID="routeLine"
+          />
+        </ShapeSource>
       </MapView>
 
-      <TouchableOpacity style={styles.compassButton} onPress={handleRecenter} activeOpacity={0.8}>
+      <TouchableOpacity 
+        style={styles.compassButton} 
+        onPress={handleRecenter} 
+        activeOpacity={0.8}
+      >
         <Compass size={24} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
   );
 }
-
-const navigationMapStyle = [
-  {
-    elementType: 'geometry',
-    stylers: [{ color: '#1a1a1a' }],
-  },
-  {
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#ffffff' }],
-  },
-  {
-    elementType: 'labels.text.stroke',
-    stylers: [{ color: '#000000' }],
-  },
-  {
-    featureType: 'administrative.country',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#4b6878' }],
-  },
-  {
-    featureType: 'administrative.land_parcel',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#64779e' }],
-  },
-  {
-    featureType: 'administrative.province',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#4b6878' }],
-  },
-  {
-    featureType: 'landscape.man_made',
-    elementType: 'geometry',
-    stylers: [{ color: '#2d2d2d' }],
-  },
-  {
-    featureType: 'landscape.natural',
-    stylers: [{ color: '#2d2d2d' }],
-  },
-  {
-    featureType: 'poi',
-    elementType: 'geometry',
-    stylers: [{ color: '#3a3a3a' }],
-  },
-  {
-    featureType: 'poi',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#d4d4d4' }],
-  },
-  {
-    featureType: 'poi.park',
-    elementType: 'geometry.fill',
-    stylers: [{ color: '#4a4a4a' }], // Changed from green to gray
-  },
-  {
-    featureType: 'poi.park',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#d4d4d4' }],
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry',
-    stylers: [{ color: '#4a4a4a' }], // Gray roads instead of green
-  },
-  {
-    featureType: 'road',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#ffffff' }],
-  },
-  {
-    featureType: 'road',
-    elementType: 'labels.text.stroke',
-    stylers: [{ color: '#000000' }],
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry',
-    stylers: [{ color: '#6b6b6b' }], // Lighter gray for highways
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#5a5a5a' }],
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#ffffff' }],
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'labels.text.stroke',
-    stylers: [{ color: '#000000' }],
-  },
-  {
-    featureType: 'road.arterial',
-    elementType: 'geometry',
-    stylers: [{ color: '#5a5a5a' }],
-  },
-  {
-    featureType: 'road.local',
-    elementType: 'geometry',
-    stylers: [{ color: '#4a4a4a' }],
-  },
-  {
-    featureType: 'transit',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#d4d4d4' }],
-  },
-  {
-    featureType: 'transit',
-    elementType: 'labels.text.stroke',
-    stylers: [{ color: '#000000' }],
-  },
-  {
-    featureType: 'transit.line',
-    elementType: 'geometry.fill',
-    stylers: [{ color: '#3a3a3a' }],
-  },
-  {
-    featureType: 'transit.station',
-    elementType: 'geometry',
-    stylers: [{ color: '#3a3a3a' }],
-  },
-  {
-    featureType: 'water',
-    elementType: 'geometry',
-    stylers: [{ color: '#1e3a8a' }], // Dark blue water
-  },
-  {
-    featureType: 'water',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#ffffff' }],
-  },
-];
 
 const styles = StyleSheet.create({
   container: {
@@ -253,52 +134,9 @@ const styles = StyleSheet.create({
     width,
     height,
   },
-  userLocationContainer: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  userLocationPulse: {
-    position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(59, 130, 246, 0.3)',
-  },
-  userLocationDot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#3B82F6',
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  destinationMarker: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  destinationPin: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#EF4444',
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
   compassButton: {
     position: 'absolute',
-    bottom: 180, // Further increased to account for tab bar + controls + safe area
+    bottom: 180,
     left: 20,
     width: 40,
     height: 40,
