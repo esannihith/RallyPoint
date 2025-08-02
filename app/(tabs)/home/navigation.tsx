@@ -181,18 +181,6 @@ export default function NavigationScreen() {
     }
   }, [route, navigationProgress, updateLocation]);
 
-  // Handle location updates from Mapbox
-  const handleLocationUpdate = useCallback((location: any) => {
-    if (location?.coords) {
-      updateLocation({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        bearing: location.coords.heading || 0, // Use heading for bearing
-        speed: location.coords.speed || 0, // Use speed
-      });
-    }
-  }, [updateLocation]);
-
   // Handle navigation progress updates
   const handleProgressUpdate = useCallback((progress: any) => {
     // This callback is not directly used anymore as progress is calculated in handleLocationUpdate
