@@ -46,8 +46,10 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
     // Calculate navigation progress if we're actively navigating
   },
 
-  updateProgress: (progress: NavigationProgress) => {
-    set({ progress });
+  updateProgress: (newProgress: NavigationProgress) => {
+    set(state => ({
+      progress: { ...state.progress, ...newProgress }
+    }));
   },
 
   // Directions actions

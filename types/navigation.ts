@@ -90,6 +90,7 @@ export interface NavigationState {
     speed: number;
   }) => void;
   updateProgress: (progress: NavigationProgress) => void;
+  updateProgress: (progress: NavigationProgress) => void;
   toggleMute: () => void;
   
   // Directions actions

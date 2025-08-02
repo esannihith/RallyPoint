@@ -6,16 +6,17 @@ import {
   Text,
   TouchableOpacity,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import Mapbox from '@rnmapbox/maps';
 import { useNavigationStore } from '@/stores/navigationStore';
-import { getNavigationRoute } from '@/services/mapboxService';
+import { getNavigationRoute, calculateDistance } from '@/services/mapboxService';
 import { NavigationInstructions } from '@/components/navigation/NavigationInstructions';
 import { NavigationMap } from '@/components/navigation/NavigationMap';
 import { NavigationControls } from '@/components/navigation/NavigationControls';
 import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
 import { LoadingSpinner } from '@/components/ui';
+import * as Location from 'expo-location';
 
 // Set Mapbox access token
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '');
@@ -25,10 +26,12 @@ export default function NavigationScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [navigationProgress, setNavigationProgress] = useState<any>(null);
-  const [currentInstruction, setCurrentInstruction] = useState<any>(null);
+  const [currentInstruction, setCurrentInstruction] = useState<any>(null); // This will be derived from progress
+  const insets = useSafeAreaInsets();
   
   const {
     startNavigation,
+    route, // Get the route from the store
     stopNavigation,
     clearNavigation,
     updateLocation,
@@ -38,6 +41,7 @@ export default function NavigationScreen() {
   const cleanup = useCallback(() => {
     // Cleanup will be handled by Mapbox SDK
   }, []);
+
 
   // Stable stop navigation handler
   const handleStopNavigation = useCallback(() => {
@@ -81,8 +85,27 @@ export default function NavigationScreen() {
         throw new Error('Could not find a route');
       }
 
+      // Request location permission if not already granted
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        throw new Error('Location permission is required for navigation');
+      }
+
       // Start navigation with the route
       startNavigation(navigationRoute);
+
+      // Initialize progress state
+      setNavigationProgress({
+        distanceRemaining: navigationRoute.distance,
+        durationRemaining: navigationRoute.duration,
+        distanceTraveled: 0,
+        fractionTraveled: 0,
+        currentStepIndex: 0,
+        currentStep: navigationRoute.steps[0] || null,
+        nextStep: navigationRoute.steps[1] || null,
+        upcomingStep: navigationRoute.steps[2] || null,
+      });
+      setCurrentInstruction(navigationRoute.steps[0]?.instruction || 'Start navigation');
 
     } catch (error) {
       console.error('Navigation initialization error:', error);
@@ -90,12 +113,73 @@ export default function NavigationScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [params.originLat, params.originLng, params.destLat, params.destLng, params.travelMode, startNavigation]);
+  }, [params.originLat, params.originLng, params.destLat, params.destLng, params.travelMode, startNavigation, updateLocation]);
 
   useEffect(() => {
     initializeNavigation();
     return cleanup;
   }, [initializeNavigation, cleanup]);
+
+  // Handle location updates from Mapbox and calculate progress
+  const handleLocationUpdate = useCallback((location: any) => {
+    if (location?.coords && route) {
+      const { latitude, longitude, heading, speed } = location.coords;
+      
+      // Update global location in store
+      updateLocation({
+        latitude,
+        longitude,
+        bearing: heading || 0,
+        speed: speed || 0,
+      });
+
+      // Calculate navigation progress
+      const currentLat = latitude;
+      const currentLng = longitude;
+
+      let currentStepIndex = navigationProgress?.currentStepIndex || 0;
+      let distanceTraveled = navigationProgress?.distanceTraveled || 0;
+
+      // Simple logic to advance step: if user is close to current step's maneuver location
+      const currentStep = route.steps[currentStepIndex];
+      if (currentStep) {
+        const maneuverLocation = currentStep.maneuver.location; // [lng, lat]
+        const distanceToManeuver = calculateDistance(
+          currentLat,
+          currentLng,
+          maneuverLocation[1], // lat
+          maneuverLocation[0]  // lng
+        );
+
+        if (distanceToManeuver < 20 && currentStepIndex < route.steps.length - 1) { // Within 20 meters
+          distanceTraveled += currentStep.distance;
+          currentStepIndex++;
+        }
+      }
+
+      // Recalculate remaining distance and duration from current step onwards
+      let distanceRemaining = 0;
+      let durationRemaining = 0;
+      for (let i = currentStepIndex; i < route.steps.length; i++) {
+        distanceRemaining += route.steps[i].distance;
+        durationRemaining += route.steps[i].duration;
+      }
+
+      const newProgress = {
+        distanceRemaining: Math.max(0, distanceRemaining),
+        durationRemaining: Math.max(0, durationRemaining),
+        distanceTraveled: distanceTraveled,
+        fractionTraveled: route.distance > 0 ? distanceTraveled / route.distance : 0,
+        currentStepIndex: currentStepIndex,
+        currentStep: route.steps[currentStepIndex] || null,
+        nextStep: route.steps[currentStepIndex + 1] || null,
+        upcomingStep: route.steps[currentStepIndex + 2] || null,
+      };
+
+      setNavigationProgress(newProgress);
+      setCurrentInstruction(newProgress.currentStep?.instruction || 'Continue straight');
+    }
+  }, [route, navigationProgress, updateLocation]);
 
   // Handle location updates from Mapbox
   const handleLocationUpdate = useCallback((location: any) => {
@@ -103,20 +187,22 @@ export default function NavigationScreen() {
       updateLocation({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-        bearing: location.coords.heading || 0,
-        speed: location.coords.speed || 0,
+        bearing: location.coords.heading || 0, // Use heading for bearing
+        speed: location.coords.speed || 0, // Use speed
       });
     }
   }, [updateLocation]);
 
   // Handle navigation progress updates
   const handleProgressUpdate = useCallback((progress: any) => {
-    setNavigationProgress(progress);
+    // This callback is not directly used anymore as progress is calculated in handleLocationUpdate
+    // It's kept for potential future integration with a more advanced SDK
   }, []);
 
   // Handle instruction updates
   const handleInstructionUpdate = useCallback((instruction: any) => {
-    setCurrentInstruction(instruction);
+    // This callback is not directly used anymore as instruction is calculated in handleLocationUpdate
+    // It's kept for potential future integration with a more advanced SDK
   }, []);
 
   if (isLoading) {
@@ -150,11 +236,11 @@ export default function NavigationScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
       
-      {/* Navigation Map */}
-      <NavigationMap />
+      {/* Navigation Map - Pass onUserLocationUpdate to get location from Mapbox */}
+      <NavigationMap onUserLocationUpdate={handleLocationUpdate} />
       
       {/* Navigation Instructions - Top overlay */}
-      <View style={styles.instructionsContainer}>
+      <View style={[styles.instructionsContainer, { top: insets.top + 16 }]}>
         <NavigationInstructions 
           progress={navigationProgress}
           currentInstruction={currentInstruction}
@@ -162,7 +248,10 @@ export default function NavigationScreen() {
       </View>
       
       {/* Navigation Controls - Bottom overlay */}
-      <View style={styles.controlsContainer}>
+      <View style={[
+        styles.controlsContainer,
+        { paddingBottom: insets.bottom + 16 }
+      ]}>
         <NavigationControls 
           onStop={handleStopNavigation}
           progress={navigationProgress}
@@ -175,7 +264,7 @@ export default function NavigationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#000000', // Background for the map
   },
   instructionsContainer: {
     position: 'absolute',
