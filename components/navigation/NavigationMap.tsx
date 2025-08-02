@@ -1,15 +1,19 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { StyleSheet, Dimensions, View, TouchableOpacity } from 'react-native';
-import Mapbox, { MapView, Camera, LocationPuck, ShapeSource, LineLayer, UserTrackingMode } from '@rnmapbox/maps';
+import Mapbox, { MapView, Camera, LocationPuck, ShapeSource, LineLayer, UserTrackingMode, OnUserLocationChangeEvent } from '@rnmapbox/maps';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { Compass } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
 // Set Mapbox access token
+interface NavigationMapProps {
+  onUserLocationUpdate: (event: OnUserLocationChangeEvent) => void;
+}
+
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '');
 
-export function NavigationMap() {
+export function NavigationMap({ onUserLocationUpdate }: NavigationMapProps) {
   const mapRef = useRef<MapView>(null);
   const cameraRef = useRef<Camera>(null);
   const { route, currentLocation } = useNavigationStore();
@@ -72,6 +76,7 @@ export function NavigationMap() {
         attributionEnabled={false}
         logoEnabled={false}
       >
+        <Mapbox.UserLocation onUpdate={onUserLocationUpdate} />
         <Camera
           ref={cameraRef}
           followUserLocation={isFollowing}
