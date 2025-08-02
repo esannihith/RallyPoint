@@ -410,13 +410,14 @@ export default function HomeScreen() {
         </View>
 
         {/* Floating Action Buttons */}
-        <FloatingActionButtons
+        {!isBottomSheetOpen && <FloatingActionButtons
           showMyLocation={true}
           showDirections={true}
           onMyLocationPress={handleMyLocationPress}
           onDirectionsPress={handleDirectionsPress}
           isMyLocationLoading={isLocationLoading}
-        />
+        />}
+
       </View>
 
       {/* Place Details Bottom Sheet - only show when open and place selected */}

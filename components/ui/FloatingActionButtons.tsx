@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'flex-end',
     gap: 12,
-    zIndex: 10, // Lower zIndex so BottomSheet appears above
+    zIndex: 5, 
   },
   fab: {
     backgroundColor: '#FFFFFF',
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
+    elevation: 4, 
     shadowColor: '#000',
     shadowOffset: {
       width: 0,

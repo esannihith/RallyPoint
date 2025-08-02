@@ -18,9 +18,6 @@ import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
 import { LoadingSpinner } from '@/components/ui';
 import * as Location from 'expo-location';
 
-// Set Mapbox access token
-Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '');
-
 export default function NavigationScreen() {
   const params = useLocalSearchParams();
   const [isLoading, setIsLoading] = useState(true);
@@ -39,8 +36,13 @@ export default function NavigationScreen() {
 
   // Stable cleanup function
   const cleanup = useCallback(() => {
-    // Cleanup will be handled by Mapbox SDK
-  }, []);
+    // Clear any ongoing navigation processes
+    try {
+      stopNavigation();
+    } catch (error) {
+      // Ignore cleanup errors
+    }
+  }, [stopNavigation]);
 
 
   // Stable stop navigation handler
@@ -225,7 +227,10 @@ export default function NavigationScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
       
       {/* Navigation Map - Pass onUserLocationUpdate to get location from Mapbox */}
-      <NavigationMap onUserLocationUpdate={handleLocationUpdate} />
+      <NavigationMap 
+        key={`nav-${params.originLat}-${params.destLat}`} 
+        onUserLocationUpdate={handleLocationUpdate} 
+      />
       
       {/* Navigation Instructions - Top overlay */}
       <View style={[styles.instructionsContainer, { top: insets.top + 16 }]}>

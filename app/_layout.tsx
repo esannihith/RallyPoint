@@ -13,12 +13,26 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates'
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
+import Mapbox from '@rnmapbox/maps';
+
+// Initialize Mapbox
+Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '');
 
 // Disable Reanimated strict mode warnings globally
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
   strict: false,
 });
+
+// Suppress NativeEventEmitter warnings for native modules
+import { LogBox } from 'react-native';
+LogBox.ignoreLogs([
+  'new NativeEventEmitter()', // Hide warnings about NativeEventEmitter
+  '`new NativeEventEmitter()` was called with a non-null argument without the required `addListener` method.',
+  '`new NativeEventEmitter()` was called with a non-null argument without the required `removeListeners` method.',
+  'ViewTagResolver', // Hide Mapbox ViewTagResolver warnings
+  'Mapbox [error] ViewTagResolver', // Hide specific Mapbox errors
+]);
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
