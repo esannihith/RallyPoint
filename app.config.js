@@ -21,6 +21,7 @@ export default {
       config: {
         googleMapsApiKey: process.env.GOOGLE_MAPS_NATIVE_KEY // Fixed prefix
       }
+
     },
 
     android: {
@@ -33,7 +34,8 @@ export default {
         googleMaps: {
           apiKey: process.env.GOOGLE_MAPS_NATIVE_KEY // Fixed prefix
         }
-      }
+      },
+      "edgeToEdgeEnabled": true
     },
 
     plugins: [
@@ -63,9 +65,7 @@ export default {
       checkAutomatically: "ON_LOAD",
       fallbackToCacheTimeout: 0
     },
-    runtimeVersion: {
-      policy: "appVersion"
-    },
+    runtimeVersion:  "1.0.0",
     experiments: {
       typedRoutes: true
     }

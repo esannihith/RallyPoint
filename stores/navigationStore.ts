@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { NavigationState, NavigationRoute, NavigationProgress, NavigationLocation } from '@/types';
-import { calculateDistance } from '@/services/mapboxService';
 
 export const useNavigationStore = create<NavigationState>((set, get) => ({
   isNavigating: false,
