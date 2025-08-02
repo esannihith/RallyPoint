@@ -84,10 +84,6 @@ WeMaps is designed for groups who want to meet, travel, and communicate together
 
 Showcase of WeMaps’s user interface and features:
 
-## Image Gallery
-
-## Image Gallery
-
 <table>
   <tr>
     <td align="center">
